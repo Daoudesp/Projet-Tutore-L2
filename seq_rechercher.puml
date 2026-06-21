@@ -1,0 +1,46 @@
+@startuml Seq_RechercherLogement
+hide footbox
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam sequenceArrowThickness 2
+skinparam sequence {
+  ParticipantBackgroundColor #FFFFFF
+  ParticipantBorderColor #000000
+  ArrowColor #000000
+  LifeLineBorderColor #000000
+  LifeLineBackgroundColor #FFFFFF
+}
+
+autonumber
+
+participant ": Utilisateur" as U
+participant ": System" as SYS
+
+activate U
+U -> SYS : Acceder a la page de recherche
+activate SYS
+SYS --> U : Afficher formulaire de recherche + filtres
+deactivate SYS
+
+U -> SYS : Saisir criteres (quartier, type, budget, disponibilite)
+U -> SYS : Lancer la recherche
+activate SYS
+SYS -> SYS : Interroger la base de donnees\navec les criteres saisis
+
+alt [Annonces correspondantes trouvees]
+  SYS --> U : Afficher liste des annonces\n(triees par pertinence)
+  deactivate SYS
+  U -> SYS : Selectionner une annonce
+  activate SYS
+  SYS --> U : Afficher detail de l'annonce
+  deactivate SYS
+else [Aucun resultat]
+  SYS --> U : Afficher 'Aucun logement trouve'
+  SYS --> U : Proposer d'elargir les filtres
+  deactivate SYS
+  note right : Le scenario reprend a l'etape 3
+end
+
+deactivate U
+
+@enduml

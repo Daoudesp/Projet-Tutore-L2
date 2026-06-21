@@ -1,0 +1,51 @@
+@startuml Seq_PublierAnnonce
+hide footbox
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam sequenceArrowThickness 2
+skinparam sequence {
+  ParticipantBackgroundColor #FFFFFF
+  ParticipantBorderColor #000000
+  ArrowColor #000000
+  LifeLineBorderColor #000000
+  LifeLineBackgroundColor #FFFFFF
+}
+
+autonumber
+
+participant ": Proprietaire" as PR
+participant ": System" as SYS
+
+activate PR
+PR -> SYS : Selectionner 'Publier une annonce'
+activate SYS
+SYS --> PR : Afficher formulaire de publication
+deactivate SYS
+
+PR -> SYS : Saisir informations du logement\n(titre, type, loyer, quartier, disponibilite)
+PR -> SYS : Telecharger photo(s)
+activate SYS
+
+alt [Format et taille photo valides]
+  SYS --> PR : Confirmation upload photo
+else [Photo invalide]
+  SYS --> PR : Message erreur (format/taille non accepte)
+  note right : Le scenario reprend a l'etape 3
+end
+deactivate SYS
+
+PR -> SYS : Soumettre le formulaire
+activate SYS
+SYS -> SYS : Valider les champs obligatoires
+
+alt [Donnees valides]
+  SYS -> SYS : Enregistrer annonce (statut = EN_ATTENTE)
+  SYS --> PR : Annonce soumise, en attente de validation
+else [Donnees invalides ou champs manquants]
+  SYS --> PR : Afficher champs en erreur
+  note right : Le scenario reprend a l'etape 3
+end
+deactivate SYS
+deactivate PR
+
+@enduml

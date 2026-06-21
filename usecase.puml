@@ -1,0 +1,86 @@
+@startuml HomeLink_UseCase
+left to right direction
+
+skinparam actorStyle default
+skinparam packageStyle rectangle
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam usecase {
+  BackgroundColor #EBF3FB
+  BorderColor #2E5496
+  FontColor #1F3864
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #1F3864
+  FontColor #1F3864
+}
+skinparam ArrowColor #1F3864
+skinparam rectangle {
+  BorderColor #2E5496
+  FontColor #2E5496
+  FontStyle bold
+}
+
+actor "Visiteur"     as V
+actor "Locataire"    as L
+actor "Proprietaire" as PR
+
+L  -|>  V
+PR -|>  V
+
+rectangle "Systeme HomeLink" {
+  usecase "S'inscrire"               as UC1
+  usecase "Se connecter"             as UC2
+  usecase "Se deconnecter"           as UC3
+  usecase "Gerer son profil"         as UC4
+  usecase "Publier une annonce"      as UC5
+  usecase "Modifier une annonce"     as UC6
+  usecase "Supprimer une annonce"    as UC7
+  usecase "Rechercher un logement"   as UC8
+  usecase "Consulter une annonce"    as UC9
+  usecase "Consulter infos quartier" as UC10
+  usecase "Ajouter aux favoris"      as UC11
+  usecase "Contacter proprietaire"   as UC12
+  usecase "Deposer un avis"          as UC13
+  usecase "Valider annonce"          as UC14
+  usecase "Rejeter annonce"          as UC15
+  usecase "Moderer avis"             as UC16
+  usecase "Gerer comptes"            as UC17
+  usecase "Tableau de bord"          as UC18
+}
+
+actor "Administrateur" as A
+
+V  --> UC1
+V  --> UC2
+V  --> UC8
+V  --> UC9
+
+L  --> UC3
+L  --> UC4
+L  --> UC10
+L  --> UC11
+L  --> UC12
+L  --> UC13
+
+PR --> UC3
+PR --> UC4
+PR --> UC5
+PR --> UC6
+PR --> UC7
+
+A  --> UC14
+A  --> UC15
+A  --> UC16
+A  --> UC17
+A  --> UC18
+
+UC5  ..>  UC2 : <<include>>
+UC11 ..>  UC2 : <<include>>
+UC12 ..>  UC2 : <<include>>
+UC13 ..>  UC2 : <<include>>
+UC6  ..>  UC5 : <<extend>>
+UC7  ..>  UC5 : <<extend>>
+
+@enduml
