@@ -1,0 +1,33 @@
+
+__init__.py
+En Python, quand tu crées un dossier, Python ne le reconnaît pas automatiquement comme un module importable. Le fichier __init__.py dit à Python "ce dossier est un module, tu peux importer ce qu'il contient". Sans lui, tu ne peux pas faire from routes.auth import ... dans ton code.
+C'est une convention Python — le nom avec les doubles underscores signifie que c'est un fichier spécial reconnu par Python lui-même.
+
+Tes deux questions
+Pour les routes — non, ce ne sont pas des composants. Les composants c'est un concept React (frontend). Les routes sont des fonctions Python dans Flask qui répondent aux requêtes.
+Pour les tables — oui, tu as bien compris. Chaque table de la base de données devient une classe Python dans models/. C'est le rôle de SQLAlchemy : tu écris une classe Python et il la traduit automatiquement en table MySQL. Par exemple :
+
+La table utilisateurs dans MySQL → devient la classe Utilisateur dans models/utilisateur.py
+Chaque colonne de la table → devient un attribut de la classe
+
+C'est ce qu'on appelle un ORM (Object Relational Mapper) — il fait le lien entre le monde Python et le monde MySQL.pourquoi recree les tables en python alors qu'on l'a deja en mysql
+
+Très bonne question.
+
+MySQL stocke les données mais ne sait pas parler Python. Flask ne sait pas parler SQL directement. SQLAlchemy fait le traducteur entre les deux.
+
+Sans SQLAlchemy, pour récupérer un utilisateur tu écrirais du SQL brut dans Python :
+
+python
+cursor.execute("SELECT * FROM utilisateurs WHERE email = %s", (email,))
+Avec SQLAlchemy, tu écris du Python pur :
+
+python
+Utilisateur.query.filter_by(email=email).first()
+C'est plus lisible, plus sécurisé et moins d'erreurs. Tu n'as pas à te souvenir de la syntaxe SQL à chaque fois.
+
+Donc pour être précis — tu ne recrées pas les tables. Tu crées juste une représentation Python de tes tables existantes pour que Flask puisse communiquer avec MySQL en langage Python.
+
+La vraie table reste dans MySQL, le modèle Python est juste un pont.
+PyMySQL est le conducteur — il établit la connexion brute entre Python et MySQL. Il parle directement en SQL. Sans lui, Python ne peut même pas se connecter à MySQL.
+SQLAlchemy est le traducteur — il te permet d'écrire du Python au lieu du SQL. Mais il a besoin de PyMySQL pour fonctionner car c'est PyMySQL qui fait la vraie connexion en bas.
