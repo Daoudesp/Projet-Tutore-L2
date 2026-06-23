@@ -31,3 +31,12 @@ Donc pour être précis — tu ne recrées pas les tables. Tu crées juste une r
 La vraie table reste dans MySQL, le modèle Python est juste un pont.
 PyMySQL est le conducteur — il établit la connexion brute entre Python et MySQL. Il parle directement en SQL. Sans lui, Python ne peut même pas se connecter à MySQL.
 SQLAlchemy est le traducteur — il te permet d'écrire du Python au lieu du SQL. Mais il a besoin de PyMySQL pour fonctionner car c'est PyMySQL qui fait la vraie connexion en bas.
+app = Flask(__name__)
+Cette ligne crée l'application Flask. Flask est la classe principale du framework, et __name__ est une variable Python qui contient le nom du fichier actuel. Flask en a besoin pour savoir où chercher les fichiers de ton projet.
+C'est comme dire "crée une application Flask et dis-lui qu'elle se trouve dans ce fichier".
+
+db et Model
+db c'est une variable qu'on a créée dans app.py :
+pythondb = SQLAlchemy(app)
+On aurait pu l'appeler autrement (database, base, etc.) mais par convention tout le monde l'appelle db. C'est nous qui l'avons créée.
+Model par contre c'est un mot propre à SQLAlchemy — c'est une classe qu'il fournit. Quand tu écris class Utilisateur(db.Model), tu dis à SQLAlchemy "cette classe hérite de Model", ce qui lui donne automatiquement tous les outils pour communiquer avec MySQL (les requêtes, les insertions, etc.).
