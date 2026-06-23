@@ -28,6 +28,9 @@ from routes.admin import admin
 from routes.profil import profil
 from models.photo import Photo
 from routes.photos import photos
+from routes.favoris import favoris
+
+app.register_blueprint(favoris)
 app.register_blueprint(auth)
 app.register_blueprint(annonces)
 app.register_blueprint(quartiers)

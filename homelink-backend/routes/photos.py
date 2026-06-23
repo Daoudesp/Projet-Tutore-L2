@@ -17,12 +17,11 @@ cloudinary.config(
 )
 
 # Uploader une photo pour une annonce
-@photos.route('/annonces/<int:annonce_id>/photos', methods=['POST'])
+@photos.route('/photos/<int:annonce_id>', methods=['POST'])
 @jwt_required()
 def upload_photo(annonce_id):
     utilisateur_id = int(get_jwt_identity())
 
-    # Vérifier que l'annonce existe et appartient au propriétaire
     annonce = Annonce.query.get(annonce_id)
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
@@ -30,19 +29,16 @@ def upload_photo(annonce_id):
     if annonce.bien.proprietaire_id != utilisateur_id:
         return jsonify({'message': 'Action non autorisée'}), 403
 
-    # Récupérer le fichier envoyé
     if 'photo' not in request.files:
         return jsonify({'message': 'Aucune photo envoyée'}), 400
 
     fichier = request.files['photo']
 
-    # Envoyer la photo vers Cloudinary
     resultat = cloudinary.uploader.upload(
         fichier,
         folder='homelink/annonces'
     )
 
-    # Sauvegarder l'URL dans MySQL
     photo = Photo(
         annonce_id=annonce_id,
         url=resultat['secure_url'],
@@ -58,7 +54,7 @@ def upload_photo(annonce_id):
 
 
 # Voir les photos d'une annonce
-@photos.route('/annonces/<int:annonce_id>/photos', methods=['GET'])
+@photos.route('/photos/<int:annonce_id>', methods=['GET'])
 def get_photos(annonce_id):
     liste = Photo.query.filter_by(annonce_id=annonce_id).all()
     resultat = []
