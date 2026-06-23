@@ -25,13 +25,17 @@ from routes.quartiers import quartiers
 from routes.messages import messages
 from routes.avis import avis
 from routes.admin import admin
-
+from routes.profil import profil
+from models.photo import Photo
+from routes.photos import photos
 app.register_blueprint(auth)
 app.register_blueprint(annonces)
 app.register_blueprint(quartiers)
 app.register_blueprint(messages)
 app.register_blueprint(avis)
 app.register_blueprint(admin)
+app.register_blueprint(profil)
+app.register_blueprint(photos)
 
 @app.route('/')
 def index():

@@ -97,3 +97,40 @@ def supprimer_annonce(id):
     db.session.commit()
 
     return jsonify({'message': 'Annonce supprimée'}), 200
+# Modifier une annonce
+@annonces.route('/annonces/<int:id>', methods=['PUT'])
+@jwt_required()
+def modifier_annonce(id):
+    utilisateur_id = int(get_jwt_identity())
+    annonce = Annonce.query.get(id)
+
+    if not annonce:
+        return jsonify({'message': 'Annonce introuvable'}), 404
+
+    if annonce.bien.proprietaire_id != utilisateur_id:
+        return jsonify({'message': 'Action non autorisée'}), 403
+
+    data = request.get_json()
+
+    # On met à jour seulement les champs envoyés
+    if 'titre' in data:
+        annonce.titre = data['titre']
+    if 'description' in data:
+        annonce.description = data['description']
+    if 'prix' in data:
+        annonce.prix = data['prix']
+    if 'type_logement' in data:
+        annonce.bien.type_logement = data['type_logement']
+    if 'adresse' in data:
+        annonce.bien.adresse = data['adresse']
+    if 'surface' in data:
+        annonce.bien.surface = data['surface']
+    if 'meuble' in data:
+        annonce.bien.meuble = data['meuble']
+
+    # Repasse en attente de validation après modification
+    annonce.statut = 'EN_ATTENTE'
+
+    db.session.commit()
+
+    return jsonify({'message': 'Annonce modifiée, en attente de validation'}), 200    
