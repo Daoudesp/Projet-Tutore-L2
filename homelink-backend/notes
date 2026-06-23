@@ -40,3 +40,8 @@ db c'est une variable qu'on a créée dans app.py :
 pythondb = SQLAlchemy(app)
 On aurait pu l'appeler autrement (database, base, etc.) mais par convention tout le monde l'appelle db. C'est nous qui l'avons créée.
 Model par contre c'est un mot propre à SQLAlchemy — c'est une classe qu'il fournit. Quand tu écris class Utilisateur(db.Model), tu dis à SQLAlchemy "cette classe hérite de Model", ce qui lui donne automatiquement tous les outils pour communiquer avec MySQL (les requêtes, les insertions, etc.).
+Avec Blueprint, tu sépares :
+
+routes/auth.py → routes d'authentification
+routes/annonces.py → routes des annonces
+routes/messages.py → routes des messages
