@@ -45,3 +45,12 @@ Avec Blueprint, tu sépares :
 routes/auth.py → routes d'authentification
 routes/annonces.py → routes des annonces
 routes/messages.py → routes des messages
+feat
+C'est une convention de nommage des commits appelée Conventional Commits. Elle permet de comprendre immédiatement le type de changement :
+
+feat: → nouvelle fonctionnalité (feature)
+fix: → correction d'un bug
+docs: → modification de documentation
+refactor: → amélioration du code sans changer le comportement
+
+Ce n'est pas obligatoire mais c'est une bonne pratique professionnelle.

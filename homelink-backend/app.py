@@ -10,16 +10,28 @@ db.init_app(app)
 jwt.init_app(app)
 CORS(app)
 
-# Importer tous les modèles pour que SQLAlchemy les connaisse
+# Modèles
 from models.utilisateur import Utilisateur
 from models.quartier import Quartier
 from models.bien_immobilier import BienImmobilier
 from models.annonce import Annonce
+from models.message import Message
+from models.avis import Avis
 
+# Routes
 from routes.auth import auth
 from routes.annonces import annonces
+from routes.quartiers import quartiers
+from routes.messages import messages
+from routes.avis import avis
+from routes.admin import admin
+
 app.register_blueprint(auth)
 app.register_blueprint(annonces)
+app.register_blueprint(quartiers)
+app.register_blueprint(messages)
+app.register_blueprint(avis)
+app.register_blueprint(admin)
 
 @app.route('/')
 def index():
