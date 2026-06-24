@@ -160,6 +160,10 @@ function DetailAnnonce() {
                     Se connecter
                   </button>
                 </>
+              ) : userLocal.role === 'proprietaire' ? (
+                <p style={{ color: '#6B5E4C', fontSize: '0.9rem', padding: '16px 0' }}>
+                  Vous êtes propriétaire. Seuls les locataires peuvent contacter un propriétaire.
+                </p>
               ) : envoye ? (
                 <div style={styles.successBox}>
                   ✅ Message envoyé ! Le propriétaire vous répondra bientôt.
