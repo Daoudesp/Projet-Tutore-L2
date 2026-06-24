@@ -11,15 +11,46 @@ function DetailAnnonce() {
   const [envoye, setEnvoye] = useState(false)
   const [favori, setFavori] = useState(false)
   const [photoIndex, setPhotoIndex] = useState(0)
+  const [avis, setAvis] = useState([])
+  const [noteForm, setNoteForm] = useState(5)
+  const [commentaireForm, setCommentaireForm] = useState('')
+  const [avisEnvoye, setAvisEnvoye] = useState(false)
+  const [avisErreur, setAvisErreur] = useState('')
   const token = localStorage.getItem('token')
   const userLocal = JSON.parse(localStorage.getItem('user') || '{}')
 
   useEffect(() => {
     api.get(`/annonces/${id}`)
-      .then(res => setAnnonce(res.data))
+      .then(res => {
+        setAnnonce(res.data)
+        if (res.data.bien_id) {
+          api.get(`/avis/${res.data.bien_id}`)
+            .then(r => setAvis(r.data))
+            .catch(() => {})
+        }
+      })
       .catch(() => navigate('/annonces'))
       .finally(() => setChargement(false))
   }, [id])
+
+  const handleAvis = async (e) => {
+    e.preventDefault()
+    setAvisErreur('')
+    try {
+      const res = await api.post('/avis', {
+        bien_id: annonce.bien_id,
+        note: noteForm,
+        commentaire: commentaireForm,
+      })
+      setAvis([res.data.avis, ...avis])
+      setAvisEnvoye(true)
+      setCommentaireForm('')
+    } catch (err) {
+      setAvisErreur(err.response?.data?.message || 'Erreur lors de l\'envoi')
+    }
+  }
+
+  const etoiles = (n) => '★'.repeat(n) + '☆'.repeat(5 - n)
 
   const handleContact = async (e) => {
     e.preventDefault()
@@ -142,6 +173,105 @@ function DetailAnnonce() {
             <p style={{ color: '#4A4035', lineHeight: '1.7', fontSize: '0.95rem' }}>
               {annonce.description || 'Aucune description fournie.'}
             </p>
+
+            {/* AVIS */}
+            <div style={{ marginTop: '36px', borderTop: '1px solid #E5DDD4', paddingTop: '28px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1C1409', marginBottom: '4px' }}>
+                Avis des locataires
+              </h3>
+              <p style={{ color: '#6B5E4C', fontSize: '0.85rem', marginBottom: '20px' }}>
+                {avis.length} avis
+                {avis.length > 0 && (
+                  <span style={{ marginLeft: '8px', color: '#E8572A', fontWeight: '700' }}>
+                    {etoiles(Math.round(avis.reduce((s, a) => s + a.note, 0) / avis.length))}
+                    {' '}{(avis.reduce((s, a) => s + a.note, 0) / avis.length).toFixed(1)}/5
+                  </span>
+                )}
+              </p>
+
+              {/* Liste avis */}
+              {avis.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '28px' }}>
+                  {avis.map(a => (
+                    <div key={a.id} style={styles.avisCard}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={styles.avisAvatar}>{(a.locataire_prenom || '?')[0]}</div>
+                          <div>
+                            <p style={{ fontWeight: '700', color: '#1C1409', margin: 0, fontSize: '0.9rem' }}>
+                              {a.locataire_prenom} {a.locataire_nom}
+                            </p>
+                            <span style={{ color: '#E8572A', fontSize: '1rem' }}>{etoiles(a.note)}</span>
+                          </div>
+                        </div>
+                        <span style={{ color: '#9B8E83', fontSize: '0.8rem' }}>{a.date_avis}</span>
+                      </div>
+                      {a.commentaire && (
+                        <p style={{ color: '#4A4035', fontSize: '0.9rem', lineHeight: '1.6', margin: 0 }}>
+                          {a.commentaire}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: '#9B8E83', fontSize: '0.9rem', marginBottom: '24px' }}>
+                  Aucun avis pour ce logement.
+                </p>
+              )}
+
+              {/* Formulaire — locataire uniquement */}
+              {token && userLocal.role === 'locataire' && !avisEnvoye && (
+                <div style={styles.avisFormBox}>
+                  <h4 style={{ fontWeight: '700', color: '#1C1409', marginBottom: '16px', fontSize: '0.95rem' }}>
+                    Laisser un avis
+                  </h4>
+                  {avisErreur && (
+                    <p style={{ color: '#dc2626', backgroundColor: '#fef2f2', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '12px' }}>
+                      {avisErreur}
+                    </p>
+                  )}
+                  <form onSubmit={handleAvis}>
+                    <label style={{ display: 'block', fontWeight: '600', color: '#374151', fontSize: '0.85rem', marginBottom: '8px' }}>
+                      Note
+                    </label>
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
+                      {[1, 2, 3, 4, 5].map(n => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setNoteForm(n)}
+                          style={{
+                            fontSize: '1.6rem', background: 'none', border: 'none',
+                            cursor: 'pointer', padding: '2px',
+                            color: n <= noteForm ? '#E8572A' : '#D1C4B8',
+                          }}
+                        >★</button>
+                      ))}
+                    </div>
+                    <label style={{ display: 'block', fontWeight: '600', color: '#374151', fontSize: '0.85rem', marginBottom: '6px' }}>
+                      Commentaire (optionnel)
+                    </label>
+                    <textarea
+                      style={styles.textarea}
+                      rows={3}
+                      placeholder="Décrivez votre expérience…"
+                      value={commentaireForm}
+                      onChange={(e) => setCommentaireForm(e.target.value)}
+                    />
+                    <button type="submit" style={{ ...styles.btnOrange, width: 'auto', padding: '10px 24px' }}>
+                      ✅ Publier mon avis
+                    </button>
+                  </form>
+                </div>
+              )}
+              {avisEnvoye && (
+                <div style={{ backgroundColor: '#DCFCE7', color: '#166534', padding: '14px', borderRadius: '10px', fontSize: '0.9rem' }}>
+                  ✅ Votre avis a été publié. Merci !
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* COLONNE DROITE — CONTACT */}
@@ -272,6 +402,20 @@ const styles = {
   successBox: {
     backgroundColor: '#DCFCE7', color: '#166534',
     padding: '16px', borderRadius: '8px', fontSize: '0.9rem', marginBottom: '12px',
+  },
+  avisCard: {
+    backgroundColor: '#FAFAF8', border: '1px solid #E5DDD4',
+    borderRadius: '12px', padding: '16px',
+  },
+  avisAvatar: {
+    width: '36px', height: '36px', borderRadius: '50%',
+    backgroundColor: '#E8572A', color: '#fff',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontWeight: '700', fontSize: '0.85rem', flexShrink: 0,
+  },
+  avisFormBox: {
+    backgroundColor: '#fff', border: '1px solid #E5DDD4',
+    borderRadius: '12px', padding: '20px',
   },
   photoNav: {
     position: 'absolute', bottom: '16px', left: '50%',

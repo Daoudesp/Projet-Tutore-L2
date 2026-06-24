@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../services/api'
 
-const QUARTIERS = ['Point E', 'Mermoz', 'Médina', 'Ouakam', 'Sacré-Cœur', 'Yoff', 'Almadies', 'Ngor', 'Fann']
+const QUARTIERS = ['Plateau', 'Point E', 'Mermoz', 'Médina', 'Ouakam', 'Sacré-Cœur', 'Yoff', 'Almadies', 'Ngor', 'Fann', 'HLM', 'Liberté', 'Grand Dakar']
 const TYPES = ['Chambre', 'Studio', 'Appartement', 'Villa']
 
 function Home() {

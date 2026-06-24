@@ -11,3 +11,5 @@ class Utilisateur(db.Model):
     telephone = db.Column(db.String(20))
     role = db.Column(db.Enum('locataire', 'proprietaire', 'administrateur'), nullable=False)
     date_inscription = db.Column(db.DateTime, server_default=db.func.now())
+    reset_token = db.Column(db.String(100), nullable=True)
+    reset_token_expire = db.Column(db.DateTime, nullable=True)

@@ -38,3 +38,89 @@ button {
 input, select, textarea {
   font-family: inherit;
 }
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE MOBILE
+═══════════════════════════════════════════════════ */
+
+/* Desktop : liens visibles, hamburger caché */
+.nav-desktop {
+  display: flex !important;
+}
+.nav-hamburger {
+  display: none !important;
+}
+
+/* ── Mobile (≤ 768px) ────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Navbar */
+  nav[style] {
+    padding: 14px 20px !important;
+  }
+  .nav-desktop {
+    display: none !important;
+  }
+  .nav-hamburger {
+    display: flex !important;
+  }
+
+  /* Grille annonces → 1 colonne */
+  .annonces-grid {
+    grid-template-columns: 1fr !important;
+    padding: 16px !important;
+    gap: 16px !important;
+  }
+
+  /* Barre de filtres annonces → colonne */
+  .annonces-filtres {
+    flex-direction: column !important;
+    padding: 16px !important;
+  }
+  .annonces-filtres select,
+  .annonces-filtres input,
+  .annonces-filtres button {
+    width: 100% !important;
+  }
+
+  /* Admin sidebar → row compact */
+  .admin-layout {
+    flex-direction: column !important;
+  }
+  .admin-sidebar {
+    width: 100% !important;
+    min-height: auto !important;
+    padding: 12px 16px !important;
+  }
+  .admin-sidebar > nav {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    gap: 6px !important;
+    padding: 0 !important;
+  }
+  .admin-content {
+    padding: 16px !important;
+  }
+
+  /* Tableaux → scroll horizontal */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* ── Tablette (769px – 900px) → 2 colonnes ──── */
+@media (min-width: 769px) and (max-width: 900px) {
+  .annonces-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ── Très petit (≤ 480px) ─────────────────────── */
+@media (max-width: 480px) {
+  body {
+    font-size: 15px;
+  }
+}

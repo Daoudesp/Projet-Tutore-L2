@@ -60,6 +60,12 @@ function Login() {
           <button type="submit" style={styles.btn}>Se connecter</button>
         </form>
 
+        <p style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.88rem' }}>
+          <Link to="/forgot-password" style={{ color: '#E8572A', textDecoration: 'none' }}>
+            Mot de passe oublié ?
+          </Link>
+        </p>
+
         <p style={styles.footer}>
           Pas encore de compte ? <Link to="/register">S'inscrire</Link>
         </p>

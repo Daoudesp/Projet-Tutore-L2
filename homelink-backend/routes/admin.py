@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models.annonce import Annonce
 from models.utilisateur import Utilisateur
+from models.photo import Photo
 
 admin = Blueprint('admin', __name__)
 
@@ -48,23 +49,37 @@ def get_utilisateurs():
     } for u in liste]), 200
 
 
-# Voir toutes les annonces en attente
+# Voir toutes les annonces (avec filtre optionnel ?statut=EN_ATTENTE)
 @admin.route('/admin/annonces', methods=['GET'])
 @jwt_required()
 def get_annonces_en_attente():
+    from flask import request as req
     uid = int(get_jwt_identity())
     if not check_admin(uid):
         return jsonify({'message': 'Accès refusé'}), 403
 
-    liste = Annonce.query.filter_by(statut='EN_ATTENTE').all()
-    return jsonify([{
-        'id': a.id,
-        'titre': a.titre,
-        'prix': float(a.prix),
-        'statut': a.statut,
-        'type_logement': a.bien.type_logement,
-        'quartier': a.bien.quartier.nom,
-    } for a in liste]), 200
+    statut_filtre = req.args.get('statut')
+    STATUTS_VALIDES = ('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE')
+    if statut_filtre:
+        if statut_filtre not in STATUTS_VALIDES:
+            return jsonify({'message': 'Statut invalide'}), 400
+        liste = Annonce.query.filter_by(statut=statut_filtre).order_by(Annonce.date_publication.desc()).all()
+    else:
+        liste = Annonce.query.order_by(Annonce.date_publication.desc()).all()
+
+    def annonce_dict(a):
+        photo = Photo.query.filter_by(annonce_id=a.id).order_by(Photo.ordre).first()
+        return {
+            'id': a.id,
+            'titre': a.titre,
+            'prix': float(a.prix),
+            'statut': a.statut,
+            'type_logement': a.bien.type_logement,
+            'quartier': a.bien.quartier.nom,
+            'photo': photo.url if photo else None,
+        }
+
+    return jsonify([annonce_dict(a) for a in liste]), 200
 
 
 # Valider une annonce

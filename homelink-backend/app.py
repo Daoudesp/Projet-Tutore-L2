@@ -46,4 +46,6 @@ def index():
     return {'message': 'API HomeLink fonctionne !'}
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import os
+    debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug)

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 
+const QUARTIERS = ['Plateau', 'Point E', 'Mermoz', 'Médina', 'Ouakam', 'Sacré-Cœur', 'Yoff', 'Almadies', 'Ngor', 'Fann', 'HLM', 'Liberté', 'Grand Dakar']
+const TYPES = ['Chambre', 'Studio', 'Appartement', 'Villa']
+
 function Annonces() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -13,13 +16,32 @@ function Annonces() {
   const type = searchParams.get('type') || ''
   const budget = searchParams.get('budget') || ''
 
+  // État local du formulaire (pré-rempli depuis l'URL)
+  const [formQuartier, setFormQuartier] = useState(quartier)
+  const [formType, setFormType] = useState(type)
+  const [formBudget, setFormBudget] = useState(budget)
+
+  const handleRecherche = (e) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (formQuartier) params.append('quartier', formQuartier)
+    if (formType) params.append('type', formType)
+    if (formBudget) params.append('budget', formBudget)
+    navigate(`/annonces?${params.toString()}`)
+  }
+
+  const handleReset = () => {
+    setFormQuartier(''); setFormType(''); setFormBudget('')
+    navigate('/annonces')
+  }
+
   useEffect(() => {
     setChargement(true)
     api.get('/annonces').then(res => {
       let resultats = res.data
       if (quartier) {
         resultats = resultats.filter(a =>
-          a.quartier?.toLowerCase().includes(quartier.toLowerCase())
+          a.quartier?.toLowerCase() === quartier.toLowerCase()
         )
       }
       if (type) {
@@ -47,6 +69,42 @@ function Annonces() {
 
   return (
     <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh' }}>
+
+      {/* BARRE DE RECHERCHE */}
+      <div style={styles.searchBar} className="annonces-filtres">
+        <form style={styles.searchForm} onSubmit={handleRecherche}>
+          <div style={styles.searchField}>
+            <label style={styles.searchLabel}>QUARTIER</label>
+            <select style={styles.searchInput} value={formQuartier} onChange={(e) => setFormQuartier(e.target.value)}>
+              <option value="">Tous les quartiers</option>
+              {QUARTIERS.map(q => <option key={q} value={q}>{q}</option>)}
+            </select>
+          </div>
+          <div style={styles.searchDivider} />
+          <div style={styles.searchField}>
+            <label style={styles.searchLabel}>TYPE</label>
+            <select style={styles.searchInput} value={formType} onChange={(e) => setFormType(e.target.value)}>
+              <option value="">Tous les types</option>
+              {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div style={styles.searchDivider} />
+          <div style={styles.searchField}>
+            <label style={styles.searchLabel}>BUDGET MAX (FCFA)</label>
+            <input
+              style={styles.searchInput}
+              type="number"
+              placeholder="ex: 150 000"
+              value={formBudget}
+              onChange={(e) => setFormBudget(e.target.value)}
+            />
+          </div>
+          <button type="submit" style={styles.searchBtn}>🔍 Rechercher</button>
+          {(formQuartier || formType || formBudget) && (
+            <button type="button" style={styles.resetBtn} onClick={handleReset}>✕</button>
+          )}
+        </form>
+      </div>
 
       <div style={styles.header}>
         <div style={styles.headerLeft}>
@@ -85,7 +143,7 @@ function Annonces() {
             </button>
           </div>
         ) : (
-          <div style={styles.grid}>
+          <div style={styles.grid} className="annonces-grid">
             {[...annonces]
               .sort((a, b) => {
                 if (tri === 'prix_asc') return a.prix - b.prix
@@ -130,6 +188,70 @@ function Annonces() {
 }
 
 const styles = {
+  searchBar: {
+    backgroundColor: '#fff',
+    borderBottom: '1px solid #E5DDD4',
+    padding: '20px 48px',
+  },
+  searchForm: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0',
+    backgroundColor: '#F5F0E8',
+    borderRadius: '12px',
+    border: '1px solid #E5DDD4',
+    overflow: 'hidden',
+  },
+  searchField: {
+    flex: 1,
+    padding: '10px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+  },
+  searchLabel: {
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    color: '#6B5E4C',
+    letterSpacing: '0.08em',
+  },
+  searchInput: {
+    border: 'none',
+    background: 'none',
+    fontSize: '0.9rem',
+    color: '#1C1409',
+    outline: 'none',
+    width: '100%',
+    padding: 0,
+  },
+  searchDivider: {
+    width: '1px',
+    height: '36px',
+    backgroundColor: '#E5DDD4',
+    flexShrink: 0,
+  },
+  searchBtn: {
+    backgroundColor: '#E8572A',
+    color: '#fff',
+    border: 'none',
+    padding: '0 28px',
+    height: '60px',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    flexShrink: 0,
+  },
+  resetBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#6B5E4C',
+    fontSize: '1.1rem',
+    cursor: 'pointer',
+    padding: '0 14px',
+    height: '60px',
+  },
   header: {
     maxWidth: '1200px',
     margin: '0 auto',

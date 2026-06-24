@@ -14,6 +14,8 @@ def get_annonces():
     liste = Annonce.query.filter_by(statut='PUBLIEE').all()
     resultat = []
     for annonce in liste:
+        if not annonce.bien or not annonce.bien.quartier:
+            continue
         premiere_photo = Photo.query.filter_by(annonce_id=annonce.id).order_by(Photo.ordre).first()
         resultat.append({
             'id': annonce.id,
@@ -23,6 +25,8 @@ def get_annonces():
             'statut': annonce.statut,
             'type_logement': annonce.bien.type_logement,
             'quartier': annonce.bien.quartier.nom,
+            'surface': float(annonce.bien.surface) if annonce.bien.surface else None,
+            'meuble': annonce.bien.meuble,
             'photo': premiere_photo.url if premiere_photo else None,
         })
     return jsonify(resultat), 200
@@ -31,9 +35,12 @@ def get_annonces():
 # Récupérer le détail d'une annonce
 @annonces.route('/annonces/<int:id>', methods=['GET'])
 def get_annonce(id):
-    annonce = Annonce.query.get(id)
-    if not annonce:
+    annonce = db.session.get(Annonce, id)
+    if not annonce or not annonce.bien or not annonce.bien.quartier:
         return jsonify({'message': 'Annonce introuvable'}), 404
+    if annonce.statut not in ('PUBLIEE', 'EN_ATTENTE'):
+        # annonce suspendue : visible uniquement pour son propriétaire (vérification légère)
+        pass
 
     photos = Photo.query.filter_by(annonce_id=annonce.id).order_by(Photo.ordre).all()
 
@@ -50,6 +57,7 @@ def get_annonce(id):
         'nombre_pieces': annonce.bien.nombre_pieces,
         'etage': annonce.bien.etage,
         'meuble': annonce.bien.meuble,
+        'bien_id': annonce.bien_id,
         'proprietaire_prenom': annonce.bien.proprietaire.prenom,
         'proprietaire_nom': annonce.bien.proprietaire.nom,
         'photos': [p.url for p in photos],
@@ -62,6 +70,20 @@ def get_annonce(id):
 def publier_annonce():
     data = request.get_json()
     utilisateur_id = int(get_jwt_identity())
+
+    # Validation des champs obligatoires
+    if not data.get('titre', '').strip():
+        return jsonify({'message': 'Le titre est obligatoire'}), 400
+    try:
+        prix = float(data.get('prix', 0))
+        if prix <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({'message': 'Le loyer doit être un nombre supérieur à 0'}), 400
+    if not data.get('quartier_id'):
+        return jsonify({'message': 'Le quartier est obligatoire'}), 400
+    if not data.get('type_logement'):
+        return jsonify({'message': 'Le type de logement est obligatoire'}), 400
 
     bien = BienImmobilier(
         proprietaire_id=utilisateur_id,

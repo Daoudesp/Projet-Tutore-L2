@@ -8,6 +8,8 @@ function Profil() {
   const [annonces, setAnnonces] = useState([])
   const [succes, setSucces] = useState(false)
   const [erreur, setErreur] = useState('')
+  const [confirmSuppr, setConfirmSuppr] = useState(false)
+  const [supprErreur, setSupprErreur] = useState('')
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
   useEffect(() => {
@@ -31,11 +33,34 @@ function Profil() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
+  const validerTelephone = (tel) => {
+    if (!tel) return true
+    const clean = tel.replace(/[\s\-]/g, '')
+    return /^(7[0-9]{8}|33[0-9]{7})$/.test(clean)
+  }
+
+  const handleSupprimerCompte = async () => {
+    setSupprErreur('')
+    try {
+      await api.delete('/profil')
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      navigate('/login')
+    } catch (err) {
+      setSupprErreur(err.response?.data?.message || 'Erreur lors de la suppression')
+      setConfirmSuppr(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErreur('')
+    if (!validerTelephone(form.telephone)) {
+      setErreur('Numéro invalide. Format attendu : 77 123 45 67 ou 33 123 45 67')
+      return
+    }
     try {
-      const res = await api.put('/profil', form)
+      await api.put('/profil', form)
       localStorage.setItem('user', JSON.stringify({ ...user, ...form }))
       setSucces(true)
       setTimeout(() => setSucces(false), 3000)
@@ -135,6 +160,34 @@ function Profil() {
             </div>
           )}
         </div>
+
+        {/* ZONE DANGER — SUPPRESSION DE COMPTE */}
+        {user.role !== 'administrateur' && (
+          <div style={styles.dangerZone}>
+            <h3 style={{ color: '#991B1B', fontWeight: '700', margin: '0 0 8px', fontSize: '1rem' }}>
+              Zone dangereuse
+            </h3>
+            <p style={{ color: '#6B5E4C', fontSize: '0.88rem', margin: '0 0 16px' }}>
+              La suppression de votre compte est irréversible. Toutes vos données seront effacées définitivement.
+            </p>
+            {supprErreur && <p style={{ color: '#dc2626', fontSize: '0.88rem', marginBottom: '12px' }}>{supprErreur}</p>}
+            {!confirmSuppr ? (
+              <button onClick={() => setConfirmSuppr(true)} style={styles.btnDanger}>
+                Supprimer mon compte
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button onClick={handleSupprimerCompte} style={styles.btnDangerConfirm}>
+                  Oui, supprimer définitivement
+                </button>
+                <button onClick={() => setConfirmSuppr(false)} style={styles.btnAnnuler}>
+                  Annuler
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   )
@@ -175,6 +228,22 @@ const styles = {
   },
   miniImg: { width: '48px', height: '48px', borderRadius: '8px', backgroundColor: '#E8DDD4', flexShrink: 0 },
   statutBadge: { fontSize: '0.72rem', fontWeight: '700', padding: '4px 10px', borderRadius: '99px' },
+  dangerZone: {
+    marginTop: '32px', border: '1px solid #FECACA', borderRadius: '14px',
+    padding: '24px', backgroundColor: '#FFF5F5',
+  },
+  btnDanger: {
+    backgroundColor: 'transparent', border: '2px solid #dc2626', color: '#dc2626',
+    padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem',
+  },
+  btnDangerConfirm: {
+    backgroundColor: '#dc2626', color: '#fff', border: 'none',
+    padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem',
+  },
+  btnAnnuler: {
+    backgroundColor: '#F3EDE6', color: '#1C1409', border: 'none',
+    padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem',
+  },
 }
 
 export default Profil

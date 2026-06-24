@@ -109,8 +109,8 @@ function Messages() {
 
                 <p style={styles.contenu}>{msg.contenu}</p>
 
-                {/* Répondre — uniquement pour le propriétaire */}
-                {estProprietaire && !reponsesEnvoyees[msg.id] && (
+                {/* Répondre — propriétaire sur tout message, locataire sur messages reçus */}
+                {(estProprietaire || msg.type === 'recu') && !reponsesEnvoyees[msg.id] && (
                   <div style={styles.repondreSection}>
                     <textarea
                       style={styles.repondreInput}

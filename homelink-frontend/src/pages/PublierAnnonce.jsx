@@ -36,6 +36,20 @@ function PublierAnnonce() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
+    setErreur('')
+  }
+
+  const validerEtape1 = () => {
+    if (!form.quartier_id) { setErreur('Veuillez choisir un quartier'); return }
+    setErreur(''); setEtape(2)
+  }
+
+  const validerEtape2 = () => {
+    if (!form.titre.trim()) { setErreur('Le titre de l\'annonce est obligatoire'); return }
+    if (!form.prix || Number(form.prix) <= 0) { setErreur('Le loyer doit être supérieur à 0 FCFA'); return }
+    if (!form.nombre_pieces || Number(form.nombre_pieces) < 1) { setErreur('Le nombre de pièces est obligatoire (min. 1)'); return }
+    if (!form.description.trim()) { setErreur('La description est obligatoire'); return }
+    setErreur(''); setEtape(3)
   }
 
   const handleSubmit = async (e) => {
@@ -139,8 +153,8 @@ function PublierAnnonce() {
               </div>
 
               <div style={styles.group}>
-                <label style={styles.label}>Quartier</label>
-                <select style={styles.input} name="quartier_id" value={form.quartier_id} onChange={handleChange} required>
+                <label style={styles.label}>Quartier <span style={styles.reqStar}>*</span></label>
+                <select style={styles.input} name="quartier_id" value={form.quartier_id} onChange={handleChange}>
                   <option value="">Choisir un quartier</option>
                   {quartiers.map(q => (
                     <option key={q.id} value={q.id}>{q.nom}</option>
@@ -153,7 +167,7 @@ function PublierAnnonce() {
                 <input style={styles.input} name="adresse" placeholder="Rue de Fann, Point E" value={form.adresse} onChange={handleChange} />
               </div>
 
-              <button type="button" style={styles.btnOrange} onClick={() => setEtape(2)}>
+              <button type="button" style={styles.btnOrange} onClick={validerEtape1}>
                 Continuer →
               </button>
             </div>
@@ -165,14 +179,14 @@ function PublierAnnonce() {
               <p style={styles.etapeLabel}>Étape 2/3 · Détails du logement</p>
 
               <div style={styles.group}>
-                <label style={styles.label}>Titre de l'annonce</label>
-                <input style={styles.input} name="titre" placeholder="Studio meublé proche UCAD" value={form.titre} onChange={handleChange} required />
+                <label style={styles.label}>Titre de l'annonce <span style={styles.reqStar}>*</span></label>
+                <input style={styles.input} name="titre" placeholder="Studio meublé proche UCAD" value={form.titre} onChange={handleChange} />
               </div>
 
               <div style={styles.row}>
                 <div style={styles.group}>
-                  <label style={styles.label}>Loyer (FCFA/mois)</label>
-                  <input style={styles.input} type="number" min="0" name="prix" placeholder="125 000" value={form.prix} onChange={handleChange} required />
+                  <label style={styles.label}>Loyer (FCFA/mois) <span style={styles.reqStar}>*</span></label>
+                  <input style={styles.input} type="number" min="1" name="prix" placeholder="125 000" value={form.prix} onChange={handleChange} />
                 </div>
                 <div style={styles.group}>
                   <label style={styles.label}>Surface (m²)</label>
@@ -182,7 +196,7 @@ function PublierAnnonce() {
 
               <div style={styles.row}>
                 <div style={styles.group}>
-                  <label style={styles.label}>Nombre de pièces</label>
+                  <label style={styles.label}>Nombre de pièces <span style={styles.reqStar}>*</span></label>
                   <input style={styles.input} type="number" min="1" name="nombre_pieces" placeholder="1" value={form.nombre_pieces} onChange={handleChange} />
                 </div>
                 <div style={styles.group}>
@@ -199,8 +213,8 @@ function PublierAnnonce() {
               </div>
 
               <div style={styles.group}>
-                <label style={styles.label}>Description</label>
-                <textarea style={{ ...styles.input, resize: 'vertical', fontFamily: 'inherit' }} name="description" rows={4} placeholder="Décrivez votre logement…" value={form.description} onChange={handleChange} />
+                <label style={styles.label}>Description <span style={styles.reqStar}>*</span></label>
+                <textarea style={{ ...styles.input, resize: 'vertical', fontFamily: 'inherit' }} name="description" rows={4} placeholder="Décrivez votre logement, l'environnement, les équipements…" value={form.description} onChange={handleChange} />
               </div>
 
               <div style={styles.infoBox}>
@@ -209,7 +223,7 @@ function PublierAnnonce() {
 
               <div style={styles.row}>
                 <button type="button" style={styles.btnGris} onClick={() => setEtape(1)}>← Retour</button>
-                <button type="button" style={styles.btnOrange} onClick={() => setEtape(3)}>Continuer →</button>
+                <button type="button" style={styles.btnOrange} onClick={validerEtape2}>Continuer →</button>
               </div>
             </div>
           )}
@@ -275,9 +289,15 @@ function PublierAnnonce() {
                 )}
               </div>
 
-              <p style={{ color: '#6B5E4C', fontSize: '0.85rem', marginBottom: '24px' }}>
-                Ajoutez jusqu'à 5 photos. Les photos sont optionnelles mais recommandées.
+              <p style={{ color: '#6B5E4C', fontSize: '0.85rem', marginBottom: '8px' }}>
+                Ajoutez jusqu'à 5 photos · <strong style={{ color: '#E8572A' }}>Au moins 1 photo obligatoire.</strong>
               </p>
+
+              {photos.length === 0 && (
+                <p style={{ backgroundColor: '#fef2f2', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '16px' }}>
+                  ⚠️ Veuillez ajouter au moins une photo avant de terminer.
+                </p>
+              )}
 
               <div style={styles.infoBox}>
                 🔍 Votre annonce sera <strong>vérifiée par un administrateur</strong> avant sa mise en ligne.
@@ -285,10 +305,10 @@ function PublierAnnonce() {
 
               <button
                 type="button"
-                style={styles.btnOrange}
-                onClick={() => setSucces(true)}
+                style={{ ...styles.btnOrange, opacity: photos.length === 0 ? 0.5 : 1, cursor: photos.length === 0 ? 'not-allowed' : 'pointer' }}
+                onClick={() => { if (photos.length === 0) return; setSucces(true) }}
               >
-                {photos.length > 0 ? 'Terminer' : 'Terminer sans photo'}
+                {uploadEnCours ? 'Upload en cours…' : 'Terminer'}
               </button>
             </div>
           )}
@@ -328,6 +348,7 @@ const styles = {
   btnOrange: { flex: 1, backgroundColor: '#E8572A', color: '#fff', border: 'none', padding: '14px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer' },
   btnGris: { flex: 1, backgroundColor: '#fff', color: '#6B5E4C', border: '1px solid #E5DDD4', padding: '14px', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' },
   erreur: { backgroundColor: '#fef2f2', color: '#dc2626', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem' },
+  reqStar: { color: '#E8572A', fontWeight: '700' },
   photosGrid: { display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' },
   photoPreview: {
     width: '90px', height: '90px', borderRadius: '10px',
