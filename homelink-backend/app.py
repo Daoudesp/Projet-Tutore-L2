@@ -17,6 +17,8 @@ from models.bien_immobilier import BienImmobilier
 from models.annonce import Annonce
 from models.message import Message
 from models.avis import Avis
+from models.photo import Photo
+from models.favori import Favori
 
 # Routes
 from routes.auth import auth
@@ -26,7 +28,6 @@ from routes.messages import messages
 from routes.avis import avis
 from routes.admin import admin
 from routes.profil import profil
-from models.photo import Photo
 from routes.photos import photos
 from routes.favoris import favoris
 

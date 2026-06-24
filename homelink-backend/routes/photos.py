@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import cloudinary
@@ -5,7 +6,6 @@ import cloudinary.uploader
 from extensions import db
 from models.annonce import Annonce
 from models.photo import Photo
-import os
 
 photos = Blueprint('photos', __name__)
 
@@ -15,6 +15,7 @@ cloudinary.config(
     api_key=os.getenv('CLOUDINARY_API_KEY'),
     api_secret=os.getenv('CLOUDINARY_API_SECRET')
 )
+
 
 # Uploader une photo pour une annonce
 @photos.route('/photos/<int:annonce_id>', methods=['POST'])
@@ -34,6 +35,9 @@ def upload_photo(annonce_id):
 
     fichier = request.files['photo']
 
+    # Compter les photos existantes pour l'ordre
+    nb_photos = Photo.query.filter_by(annonce_id=annonce_id).count()
+
     resultat = cloudinary.uploader.upload(
         fichier,
         folder='homelink/annonces'
@@ -42,7 +46,7 @@ def upload_photo(annonce_id):
     photo = Photo(
         annonce_id=annonce_id,
         url=resultat['secure_url'],
-        ordre=0
+        ordre=nb_photos
     )
     db.session.add(photo)
     db.session.commit()
@@ -56,7 +60,7 @@ def upload_photo(annonce_id):
 # Voir les photos d'une annonce
 @photos.route('/photos/<int:annonce_id>', methods=['GET'])
 def get_photos(annonce_id):
-    liste = Photo.query.filter_by(annonce_id=annonce_id).all()
+    liste = Photo.query.filter_by(annonce_id=annonce_id).order_by(Photo.ordre).all()
     resultat = []
     for photo in liste:
         resultat.append({

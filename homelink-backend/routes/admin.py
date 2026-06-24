@@ -6,38 +6,73 @@ from models.utilisateur import Utilisateur
 
 admin = Blueprint('admin', __name__)
 
+
+def check_admin(utilisateur_id):
+    u = Utilisateur.query.get(utilisateur_id)
+    return u and u.role == 'administrateur'
+
+
+# Stats du tableau de bord
+@admin.route('/admin/stats', methods=['GET'])
+@jwt_required()
+def get_stats():
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
+        return jsonify({'message': 'Accès refusé'}), 403
+
+    return jsonify({
+        'en_attente': Annonce.query.filter_by(statut='EN_ATTENTE').count(),
+        'publiees': Annonce.query.filter_by(statut='PUBLIEE').count(),
+        'proprietaires': Utilisateur.query.filter_by(role='proprietaire').count(),
+        'locataires': Utilisateur.query.filter_by(role='locataire').count(),
+    }), 200
+
+
+# Liste des utilisateurs
+@admin.route('/admin/utilisateurs', methods=['GET'])
+@jwt_required()
+def get_utilisateurs():
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
+        return jsonify({'message': 'Accès refusé'}), 403
+
+    liste = Utilisateur.query.order_by(Utilisateur.date_inscription.desc()).all()
+    return jsonify([{
+        'id': u.id,
+        'nom': u.nom,
+        'prenom': u.prenom,
+        'email': u.email,
+        'telephone': u.telephone or '',
+        'role': u.role,
+        'date_inscription': u.date_inscription.strftime('%Y-%m-%d'),
+    } for u in liste]), 200
+
+
 # Voir toutes les annonces en attente
 @admin.route('/admin/annonces', methods=['GET'])
 @jwt_required()
 def get_annonces_en_attente():
-    utilisateur_id = int(get_jwt_identity())
-    utilisateur = Utilisateur.query.get(utilisateur_id)
-
-    if utilisateur.role != 'administrateur':
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
         return jsonify({'message': 'Accès refusé'}), 403
 
     liste = Annonce.query.filter_by(statut='EN_ATTENTE').all()
-    resultat = []
-    for annonce in liste:
-        resultat.append({
-            'id': annonce.id,
-            'titre': annonce.titre,
-            'prix': float(annonce.prix),
-            'statut': annonce.statut,
-            'type_logement': annonce.bien.type_logement,
-            'quartier': annonce.bien.quartier.nom
-        })
-    return jsonify(resultat), 200
+    return jsonify([{
+        'id': a.id,
+        'titre': a.titre,
+        'prix': float(a.prix),
+        'statut': a.statut,
+        'type_logement': a.bien.type_logement,
+        'quartier': a.bien.quartier.nom,
+    } for a in liste]), 200
 
 
 # Valider une annonce
 @admin.route('/admin/annonces/<int:id>/valider', methods=['PUT'])
 @jwt_required()
 def valider_annonce(id):
-    utilisateur_id = int(get_jwt_identity())
-    utilisateur = Utilisateur.query.get(utilisateur_id)
-
-    if utilisateur.role != 'administrateur':
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
         return jsonify({'message': 'Accès refusé'}), 403
 
     annonce = Annonce.query.get(id)
@@ -46,7 +81,6 @@ def valider_annonce(id):
 
     annonce.statut = 'PUBLIEE'
     db.session.commit()
-
     return jsonify({'message': 'Annonce validée et publiée'}), 200
 
 
@@ -54,10 +88,8 @@ def valider_annonce(id):
 @admin.route('/admin/annonces/<int:id>/rejeter', methods=['PUT'])
 @jwt_required()
 def rejeter_annonce(id):
-    utilisateur_id = int(get_jwt_identity())
-    utilisateur = Utilisateur.query.get(utilisateur_id)
-
-    if utilisateur.role != 'administrateur':
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
         return jsonify({'message': 'Accès refusé'}), 403
 
     annonce = Annonce.query.get(id)
@@ -66,5 +98,4 @@ def rejeter_annonce(id):
 
     annonce.statut = 'SUSPENDUE'
     db.session.commit()
-
     return jsonify({'message': 'Annonce rejetée'}), 200

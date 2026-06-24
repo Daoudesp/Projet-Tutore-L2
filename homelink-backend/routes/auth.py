@@ -54,6 +54,7 @@ def connexion():
             'nom': utilisateur.nom,
             'prenom': utilisateur.prenom,
             'email': utilisateur.email,
+            'telephone': utilisateur.telephone,
             'role': utilisateur.role
         }
     }), 200

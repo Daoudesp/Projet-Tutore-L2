@@ -3,8 +3,10 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models.annonce import Annonce
 from models.bien_immobilier import BienImmobilier
+from models.photo import Photo
 
 annonces = Blueprint('annonces', __name__)
+
 
 # Récupérer toutes les annonces publiées
 @annonces.route('/annonces', methods=['GET'])
@@ -12,6 +14,7 @@ def get_annonces():
     liste = Annonce.query.filter_by(statut='PUBLIEE').all()
     resultat = []
     for annonce in liste:
+        premiere_photo = Photo.query.filter_by(annonce_id=annonce.id).order_by(Photo.ordre).first()
         resultat.append({
             'id': annonce.id,
             'titre': annonce.titre,
@@ -20,6 +23,7 @@ def get_annonces():
             'statut': annonce.statut,
             'type_logement': annonce.bien.type_logement,
             'quartier': annonce.bien.quartier.nom,
+            'photo': premiere_photo.url if premiere_photo else None,
         })
     return jsonify(resultat), 200
 
@@ -30,6 +34,9 @@ def get_annonce(id):
     annonce = Annonce.query.get(id)
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
+
+    photos = Photo.query.filter_by(annonce_id=annonce.id).order_by(Photo.ordre).all()
+
     return jsonify({
         'id': annonce.id,
         'titre': annonce.titre,
@@ -40,7 +47,12 @@ def get_annonce(id):
         'quartier': annonce.bien.quartier.nom,
         'adresse': annonce.bien.adresse,
         'surface': float(annonce.bien.surface) if annonce.bien.surface else None,
+        'nombre_pieces': annonce.bien.nombre_pieces,
+        'etage': annonce.bien.etage,
         'meuble': annonce.bien.meuble,
+        'proprietaire_prenom': annonce.bien.proprietaire.prenom,
+        'proprietaire_nom': annonce.bien.proprietaire.nom,
+        'photos': [p.url for p in photos],
     }), 200
 
 
@@ -51,7 +63,6 @@ def publier_annonce():
     data = request.get_json()
     utilisateur_id = int(get_jwt_identity())
 
-    # Créer le bien immobilier
     bien = BienImmobilier(
         proprietaire_id=utilisateur_id,
         quartier_id=data['quartier_id'],
@@ -64,9 +75,8 @@ def publier_annonce():
         type_logement=data['type_logement']
     )
     db.session.add(bien)
-    db.session.flush()  # Pour obtenir l'id du bien avant le commit
+    db.session.flush()
 
-    # Créer l'annonce
     annonce = Annonce(
         bien_id=bien.id,
         titre=data['titre'],
@@ -77,7 +87,7 @@ def publier_annonce():
     db.session.add(annonce)
     db.session.commit()
 
-    return jsonify({'message': 'Annonce soumise, en attente de validation'}), 201
+    return jsonify({'message': 'Annonce soumise, en attente de validation', 'annonce_id': annonce.id}), 201
 
 
 # Supprimer une annonce (propriétaire connecté)
@@ -97,6 +107,8 @@ def supprimer_annonce(id):
     db.session.commit()
 
     return jsonify({'message': 'Annonce supprimée'}), 200
+
+
 # Modifier une annonce
 @annonces.route('/annonces/<int:id>', methods=['PUT'])
 @jwt_required()
@@ -112,7 +124,6 @@ def modifier_annonce(id):
 
     data = request.get_json()
 
-    # On met à jour seulement les champs envoyés
     if 'titre' in data:
         annonce.titre = data['titre']
     if 'description' in data:
@@ -128,9 +139,7 @@ def modifier_annonce(id):
     if 'meuble' in data:
         annonce.bien.meuble = data['meuble']
 
-    # Repasse en attente de validation après modification
     annonce.statut = 'EN_ATTENTE'
-
     db.session.commit()
 
-    return jsonify({'message': 'Annonce modifiée, en attente de validation'}), 200    
+    return jsonify({'message': 'Annonce modifiée, en attente de validation'}), 200

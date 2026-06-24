@@ -3,6 +3,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash
 from extensions import db
 from models.utilisateur import Utilisateur
+from models.annonce import Annonce
+from models.bien_immobilier import BienImmobilier
 
 profil = Blueprint('profil', __name__)
 
@@ -44,3 +46,23 @@ def modifier_profil():
     db.session.commit()
 
     return jsonify({'message': 'Profil mis à jour avec succès'}), 200
+
+
+# Annonces du propriétaire connecté (tous statuts)
+@profil.route('/profil/annonces', methods=['GET'])
+@jwt_required()
+def get_mes_annonces():
+    utilisateur_id = int(get_jwt_identity())
+    liste = (Annonce.query
+             .join(BienImmobilier)
+             .filter(BienImmobilier.proprietaire_id == utilisateur_id)
+             .order_by(Annonce.date_publication.desc())
+             .all())
+    return jsonify([{
+        'id': a.id,
+        'titre': a.titre,
+        'prix': float(a.prix),
+        'statut': a.statut,
+        'type_logement': a.bien.type_logement,
+        'quartier': a.bien.quartier.nom,
+    } for a in liste]), 200

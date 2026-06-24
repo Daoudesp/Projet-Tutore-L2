@@ -1,0 +1,19 @@
+Axios
+Axios est une bibliothèque JavaScript qui permet à React d'envoyer des requêtes HTTP vers ton API Flask. C'est lui qui fait la communication entre le frontend et le backend.
+Par exemple quand un utilisateur clique sur "Se connecter", Axios envoie les données (email + mot de passe) à http://127.0.0.1:5000/connexion et récupère la réponse (le token JWT).
+Sans Axios, React ne peut pas parler à Flask.
+
+React Router DOM
+React Router DOM permet de naviguer entre les pages dans React. Sans lui, React ne sait pas afficher une page différente quand tu changes l'URL.
+Par exemple :
+
+http://localhost:5173/ → affiche la page d'accueil
+http://localhost:5173/annonces → affiche la liste des annonces
+http://localhost:5173/login → affiche la page de connexion
+
+Sans React Router DOM, tout s'affiche sur une seule page et l'URL ne change jamais.
+pages/ → contient chaque page de l'application (accueil, connexion, annonces...)
+components/ → contient les éléments réutilisables sur plusieurs pages (navbar, carte d'annonce...)
+services/ → contient les fichiers qui communiquent avec l'API Flask via Axios. Au lieu d'écrire les appels Axios directement dans chaque page, on les regroupe ici
+Fichier main.jsx
+Rôle : C'est le point d'entrée de l'application React. Il monte l'application dans le HTML et active le système de routing.

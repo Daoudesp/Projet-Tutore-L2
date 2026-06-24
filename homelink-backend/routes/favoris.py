@@ -3,8 +3,10 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models.favori import Favori
 from models.annonce import Annonce
+from models.photo import Photo
 
 favoris = Blueprint('favoris', __name__)
+
 
 # Ajouter une annonce aux favoris
 @favoris.route('/favoris/<int:annonce_id>', methods=['POST'])
@@ -12,12 +14,10 @@ favoris = Blueprint('favoris', __name__)
 def ajouter_favori(annonce_id):
     locataire_id = int(get_jwt_identity())
 
-    # Vérifier si l'annonce existe
     annonce = Annonce.query.get(annonce_id)
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
 
-    # Vérifier si déjà dans les favoris
     existant = Favori.query.filter_by(
         locataire_id=locataire_id,
         annonce_id=annonce_id
@@ -41,6 +41,7 @@ def get_favoris():
 
     resultat = []
     for favori in liste:
+        premiere_photo = Photo.query.filter_by(annonce_id=favori.annonce_id).order_by(Photo.ordre).first()
         resultat.append({
             'id': favori.id,
             'annonce_id': favori.annonce_id,
@@ -48,7 +49,8 @@ def get_favoris():
             'prix': float(favori.annonce.prix),
             'quartier': favori.annonce.bien.quartier.nom,
             'type_logement': favori.annonce.bien.type_logement,
-            'date_ajout': favori.date_ajout.strftime('%Y-%m-%d %H:%M')
+            'date_ajout': favori.date_ajout.strftime('%Y-%m-%d %H:%M'),
+            'photo': premiere_photo.url if premiere_photo else None,
         })
     return jsonify(resultat), 200
 
