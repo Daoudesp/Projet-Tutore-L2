@@ -6,6 +6,8 @@ function Register() {
   const navigate = useNavigate()
   const [erreur, setErreur] = useState('')
   const [confirmation, setConfirmation] = useState('')
+  const [inscrit, setInscrit] = useState(false)
+  const [emailInscrit, setEmailInscrit] = useState('')
   const [form, setForm] = useState({
     nom: '',
     prenom: '',
@@ -45,13 +47,34 @@ function Register() {
 
     try {
       await api.post('/inscription', form)
-      navigate('/login')
+      setEmailInscrit(form.email)
+      setInscrit(true)
     } catch (err) {
       setErreur(err.response?.data?.message || 'Erreur lors de la création du compte')
     }
   }
 
   const forcePassword = form.mot_de_passe.length > 0 && form.mot_de_passe.length < 6
+
+  if (inscrit) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <div style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '16px' }}>📧</div>
+          <h1 style={{ ...styles.titre, textAlign: 'center' }}>Vérifiez votre email !</h1>
+          <p style={{ color: '#6B5E4C', textAlign: 'center', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '8px' }}>
+            Un email de confirmation a été envoyé à <strong>{emailInscrit}</strong>.
+          </p>
+          <p style={{ color: '#9B8E83', textAlign: 'center', fontSize: '0.85rem', marginBottom: '28px' }}>
+            Cliquez sur le lien dans l'email pour activer votre compte avant de vous connecter.
+          </p>
+          <Link to="/login" style={{ display: 'block', textAlign: 'center', color: '#E8572A', fontWeight: '600', textDecoration: 'none' }}>
+            Aller à la connexion →
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={styles.page}>

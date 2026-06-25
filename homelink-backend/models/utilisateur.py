@@ -13,3 +13,5 @@ class Utilisateur(db.Model):
     date_inscription = db.Column(db.DateTime, server_default=db.func.now())
     reset_token = db.Column(db.String(100), nullable=True)
     reset_token_expire = db.Column(db.DateTime, nullable=True)
+    email_verifie = db.Column(db.Boolean, default=False, nullable=False)
+    email_token = db.Column(db.String(100), nullable=True)
