@@ -67,6 +67,14 @@ function Admin() {
     } catch { alert('Erreur lors du rejet') }
   }
 
+  const handleSupprimerAnnonce = async (id) => {
+    if (!window.confirm('Supprimer cette annonce définitivement ?')) return
+    try {
+      await api.delete(`/annonces/${id}`)
+      chargerTout()
+    } catch { alert('Erreur lors de la suppression') }
+  }
+
   return (
     <div style={styles.page} className="admin-layout">
 
@@ -145,7 +153,7 @@ function Admin() {
                 <h2 style={styles.tableTitre}>Annonces en attente</h2>
                 <button style={styles.lienOrange} onClick={() => setOnglet('annonces')}>Voir tout</button>
               </div>
-              <AnnonceTable annonces={annonces.filter(a => a.statut === 'EN_ATTENTE').slice(0, 5)} onValider={handleValider} onRejeter={handleRejeter} />
+              <AnnonceTable annonces={annonces.filter(a => a.statut === 'EN_ATTENTE').slice(0, 5)} onValider={handleValider} onRejeter={handleRejeter} onSupprimer={handleSupprimerAnnonce} />
             </div>
           </>
         )}
@@ -162,7 +170,7 @@ function Admin() {
               </p>
             </div>
             <div style={styles.tableSection}>
-              <AnnonceTable annonces={annonces} onValider={handleValider} onRejeter={handleRejeter} />
+              <AnnonceTable annonces={annonces} onValider={handleValider} onRejeter={handleRejeter} onSupprimer={handleSupprimerAnnonce} />
             </div>
           </>
         )}
@@ -372,7 +380,7 @@ function Admin() {
   )
 }
 
-function AnnonceTable({ annonces, onValider, onRejeter }) {
+function AnnonceTable({ annonces, onValider, onRejeter, onSupprimer }) {
   if (annonces.length === 0) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#6B5E4C' }}>
@@ -383,6 +391,8 @@ function AnnonceTable({ annonces, onValider, onRejeter }) {
   const statutStyle = {
     'EN_ATTENTE':  { bg: '#FEF9C3', color: '#854D0E', label: 'En attente' },
     'PUBLIEE':     { bg: '#DCFCE7', color: '#166534', label: 'Publiée' },
+    'LOUEE':       { bg: '#DBEAFE', color: '#1E40AF', label: 'Louée' },
+    'SUSPENDUE':   { bg: '#FEE2E2', color: '#991B1B', label: 'Suspendue' },
     'SUSPENDUE':   { bg: '#FEE2E2', color: '#991B1B', label: 'Rejetée' },
   }
 
@@ -419,16 +429,21 @@ function AnnonceTable({ annonces, onValider, onRejeter }) {
                   </span>
                 </td>
                 <td style={styles.td}>
-                  {a.statut === 'EN_ATTENTE' ? (
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button style={styles.btnValider} onClick={() => onValider(a.id)}>Valider</button>
-                      <button style={styles.btnRejeter} onClick={() => onRejeter(a.id)}>Rejeter</button>
-                    </div>
-                  ) : a.statut === 'PUBLIEE' ? (
-                    <button style={styles.btnRejeter} onClick={() => onRejeter(a.id)}>Suspendre</button>
-                  ) : (
-                    <button style={styles.btnValider} onClick={() => onValider(a.id)}>Republier</button>
-                  )}
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {a.statut === 'EN_ATTENTE' && (
+                      <>
+                        <button style={styles.btnValider} onClick={() => onValider(a.id)}>Valider</button>
+                        <button style={styles.btnRejeter} onClick={() => onRejeter(a.id)}>Rejeter</button>
+                      </>
+                    )}
+                    {a.statut === 'PUBLIEE' && (
+                      <button style={styles.btnRejeter} onClick={() => onRejeter(a.id)}>Suspendre</button>
+                    )}
+                    {(a.statut === 'SUSPENDUE' || a.statut === 'LOUEE') && (
+                      <button style={styles.btnValider} onClick={() => onValider(a.id)}>Republier</button>
+                    )}
+                    <button style={styles.btnSupprimer} onClick={() => onSupprimer(a.id)}>🗑</button>
+                  </div>
                 </td>
               </tr>
             )
@@ -505,6 +520,10 @@ const styles = {
   btnRejeter: {
     backgroundColor: '#fff', color: '#E8572A', border: '1px solid #E8572A',
     padding: '7px 16px', borderRadius: '6px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer',
+  },
+  btnSupprimer: {
+    backgroundColor: '#FFF5F5', color: '#dc2626', border: '1px solid #FECACA',
+    padding: '7px 10px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer',
   },
   formLabel: { display: 'block', fontWeight: '600', color: '#374151', marginBottom: '6px', fontSize: '0.85rem' },
   formInput: {

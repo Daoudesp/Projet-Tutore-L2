@@ -11,10 +11,15 @@ function Home() {
   const [type, setType] = useState('')
   const [budget, setBudget] = useState('')
   const [annonces, setAnnonces] = useState([])
+  const [stats, setStats] = useState({ logements: 0, quartiers: 0 })
 
   useEffect(() => {
     api.get('/annonces').then(res => {
-      setAnnonces(res.data.slice(0, 4))
+      const data = res.data
+      setAnnonces(data.slice(0, 4))
+      // Stats réelles depuis les annonces publiées
+      const quartiersUniques = new Set(data.map(a => a.quartier).filter(Boolean))
+      setStats({ logements: data.length, quartiers: quartiersUniques.size })
     }).catch(() => {})
   }, [])
 
@@ -75,12 +80,12 @@ function Home() {
 
           <div style={styles.stats}>
             <div style={styles.stat}>
-              <strong style={styles.statNum}>2 400+</strong>
-              <span style={styles.statLib}>logements</span>
+              <strong style={styles.statNum}>{stats.logements}</strong>
+              <span style={styles.statLib}>logement{stats.logements > 1 ? 's' : ''}</span>
             </div>
             <div style={styles.stat}>
-              <strong style={styles.statNum}>38</strong>
-              <span style={styles.statLib}>quartiers</span>
+              <strong style={styles.statNum}>{stats.quartiers}</strong>
+              <span style={styles.statLib}>quartier{stats.quartiers > 1 ? 's' : ''}</span>
             </div>
             <div style={styles.stat}>
               <strong style={styles.statNum}>100%</strong>

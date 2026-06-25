@@ -4,8 +4,11 @@ from extensions import db
 from models.annonce import Annonce
 from models.bien_immobilier import BienImmobilier
 from models.photo import Photo
+from models.utilisateur import Utilisateur
 
 annonces = Blueprint('annonces', __name__)
+
+STATUTS_VALIDES = ('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE')
 
 
 # Récupérer toutes les annonces publiées
@@ -38,9 +41,6 @@ def get_annonce(id):
     annonce = db.session.get(Annonce, id)
     if not annonce or not annonce.bien or not annonce.bien.quartier:
         return jsonify({'message': 'Annonce introuvable'}), 404
-    if annonce.statut not in ('PUBLIEE', 'EN_ATTENTE'):
-        # annonce suspendue : visible uniquement pour son propriétaire (vérification légère)
-        pass
 
     photos = Photo.query.filter_by(annonce_id=annonce.id).order_by(Photo.ordre).all()
 
@@ -71,7 +71,6 @@ def publier_annonce():
     data = request.get_json()
     utilisateur_id = int(get_jwt_identity())
 
-    # Validation des champs obligatoires
     if not data.get('titre', '').strip():
         return jsonify({'message': 'Le titre est obligatoire'}), 400
     try:
@@ -112,22 +111,61 @@ def publier_annonce():
     return jsonify({'message': 'Annonce soumise, en attente de validation', 'annonce_id': annonce.id}), 201
 
 
-# Supprimer une annonce (propriétaire connecté)
+# Changer le statut d'une annonce (propriétaire : LOUEE/PUBLIEE | admin : tous)
+@annonces.route('/annonces/<int:id>/statut', methods=['PUT'])
+@jwt_required()
+def changer_statut(id):
+    utilisateur_id = int(get_jwt_identity())
+    utilisateur = db.session.get(Utilisateur, utilisateur_id)
+    if not utilisateur:
+        return jsonify({'message': 'Utilisateur introuvable'}), 404
+
+    annonce = db.session.get(Annonce, id)
+    if not annonce:
+        return jsonify({'message': 'Annonce introuvable'}), 404
+
+    data = request.get_json()
+    nouveau_statut = data.get('statut', '').upper()
+
+    if utilisateur.role == 'administrateur':
+        # Admin peut tout changer
+        if nouveau_statut not in STATUTS_VALIDES:
+            return jsonify({'message': 'Statut invalide'}), 400
+    elif utilisateur.role == 'proprietaire':
+        # Propriétaire peut seulement : PUBLIEE → LOUEE ou LOUEE → PUBLIEE
+        if annonce.bien.proprietaire_id != utilisateur_id:
+            return jsonify({'message': 'Action non autorisée'}), 403
+        if nouveau_statut not in ('LOUEE', 'PUBLIEE'):
+            return jsonify({'message': 'Action non autorisée'}), 403
+        if annonce.statut not in ('PUBLIEE', 'LOUEE'):
+            return jsonify({'message': 'Seules les annonces publiées peuvent être modifiées'}), 400
+    else:
+        return jsonify({'message': 'Action non autorisée'}), 403
+
+    annonce.statut = nouveau_statut
+    db.session.commit()
+    return jsonify({'message': f'Statut mis à jour : {nouveau_statut}'}), 200
+
+
+# Supprimer une annonce (propriétaire = ses annonces | admin = toutes)
 @annonces.route('/annonces/<int:id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_annonce(id):
     utilisateur_id = int(get_jwt_identity())
-    annonce = Annonce.query.get(id)
+    utilisateur = db.session.get(Utilisateur, utilisateur_id)
+    if not utilisateur:
+        return jsonify({'message': 'Utilisateur introuvable'}), 404
 
+    annonce = db.session.get(Annonce, id)
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
 
-    if annonce.bien.proprietaire_id != utilisateur_id:
-        return jsonify({'message': 'Action non autorisée'}), 403
+    if utilisateur.role != 'administrateur':
+        if annonce.bien.proprietaire_id != utilisateur_id:
+            return jsonify({'message': 'Action non autorisée'}), 403
 
     db.session.delete(annonce)
     db.session.commit()
-
     return jsonify({'message': 'Annonce supprimée'}), 200
 
 
@@ -136,16 +174,14 @@ def supprimer_annonce(id):
 @jwt_required()
 def modifier_annonce(id):
     utilisateur_id = int(get_jwt_identity())
-    annonce = Annonce.query.get(id)
+    annonce = db.session.get(Annonce, id)
 
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
-
     if annonce.bien.proprietaire_id != utilisateur_id:
         return jsonify({'message': 'Action non autorisée'}), 403
 
     data = request.get_json()
-
     if 'titre' in data:
         annonce.titre = data['titre']
     if 'description' in data:
@@ -163,5 +199,4 @@ def modifier_annonce(id):
 
     annonce.statut = 'EN_ATTENTE'
     db.session.commit()
-
     return jsonify({'message': 'Annonce modifiée, en attente de validation'}), 200

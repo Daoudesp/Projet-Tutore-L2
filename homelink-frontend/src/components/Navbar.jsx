@@ -46,6 +46,7 @@ function Navbar() {
 
       {/* Menu Desktop */}
       <div style={styles.links} className="nav-desktop">
+        <Link to="/" style={styles.link}>Accueil</Link>
         <Link to="/annonces" style={styles.link}>Rechercher</Link>
 
         {token ? (
@@ -94,6 +95,7 @@ function Navbar() {
       {/* Menu mobile déroulant */}
       {menuOuvert && (
         <div style={styles.mobileMenu} className="nav-mobile">
+          <Link to="/" style={styles.mobileLink} onClick={fermerMenu}>Accueil</Link>
           <Link to="/annonces" style={styles.mobileLink} onClick={fermerMenu}>Rechercher</Link>
 
           {token ? (

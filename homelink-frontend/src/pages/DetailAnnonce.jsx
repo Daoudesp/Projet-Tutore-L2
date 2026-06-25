@@ -120,8 +120,16 @@ function DetailAnnonce() {
           {/* COLONNE GAUCHE */}
           <div style={styles.left}>
             <div style={styles.badges}>
-              <span style={styles.badgeVert}>Disponible</span>
-              <span style={styles.badgeOrange}>✔ Vérifié</span>
+              {annonce.statut === 'LOUEE' ? (
+                <span style={{ ...styles.badgeVert, backgroundColor: '#DBEAFE', color: '#1E40AF' }}>
+                  🔒 Logement loué
+                </span>
+              ) : (
+                <span style={styles.badgeVert}>Disponible</span>
+              )}
+              {annonce.statut === 'PUBLIEE' && (
+                <span style={styles.badgeOrange}>✔ Vérifié</span>
+              )}
             </div>
 
             <h1 style={styles.titre}>{annonce.titre}</h1>

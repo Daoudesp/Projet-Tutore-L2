@@ -16,3 +16,11 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
     JWT_ACCESS_TOKEN_EXPIRES = False  # Token sans expiration (développement)
+
+    # Flask-Mail (Gmail SMTP)
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')       # ton.email@gmail.com
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')       # mot de passe d'application Google (16 chars)
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_USERNAME')

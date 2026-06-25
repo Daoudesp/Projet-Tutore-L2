@@ -39,6 +39,26 @@ function Profil() {
     return /^(7[0-9]{8}|33[0-9]{7})$/.test(clean)
   }
 
+  const handleChangerStatut = async (annonceId, statut) => {
+    try {
+      await api.put(`/annonces/${annonceId}/statut`, { statut })
+      const res = await api.get('/profil/annonces')
+      setAnnonces(res.data)
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur')
+    }
+  }
+
+  const handleSupprimerAnnonce = async (annonceId) => {
+    if (!window.confirm('Supprimer cette annonce définitivement ?')) return
+    try {
+      await api.delete(`/annonces/${annonceId}`)
+      setAnnonces(annonces.filter(a => a.id !== annonceId))
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur')
+    }
+  }
+
   const handleSupprimerCompte = async () => {
     setSupprErreur('')
     try {
@@ -135,25 +155,36 @@ function Profil() {
                 </p>
               ) : (
                 annonces.map(a => (
-                  <div
-                    key={a.id}
-                    style={styles.annonceRow}
-                    onClick={() => navigate(`/annonces/${a.id}`)}
-                  >
-                    <div style={styles.miniImg} />
-                    <div style={{ flex: 1 }}>
+                  <div key={a.id} style={styles.annonceRow}>
+                    <div style={styles.miniImg} onClick={() => navigate(`/annonces/${a.id}`)} />
+                    <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate(`/annonces/${a.id}`)}>
                       <p style={{ fontWeight: '600', color: '#1C1409', margin: '0 0 4px', fontSize: '0.9rem' }}>{a.titre}</p>
                       <p style={{ color: '#6B5E4C', fontSize: '0.82rem', margin: 0 }}>
                         {Number(a.prix).toLocaleString('fr-FR')} FCFA/mois
                       </p>
                     </div>
-                    <span style={{
-                      ...styles.statutBadge,
-                      backgroundColor: a.statut === 'PUBLIEE' ? '#DCFCE7' : '#FEF9C3',
-                      color: a.statut === 'PUBLIEE' ? '#166534' : '#854D0E',
-                    }}>
-                      {a.statut}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                      <span style={{
+                        ...styles.statutBadge,
+                        backgroundColor: a.statut === 'PUBLIEE' ? '#DCFCE7' : a.statut === 'LOUEE' ? '#DBEAFE' : '#FEF9C3',
+                        color: a.statut === 'PUBLIEE' ? '#166534' : a.statut === 'LOUEE' ? '#1E40AF' : '#854D0E',
+                      }}>
+                        {a.statut === 'LOUEE' ? 'Louée' : a.statut === 'PUBLIEE' ? 'Publiée' : a.statut === 'SUSPENDUE' ? 'Suspendue' : 'En attente'}
+                      </span>
+                      {a.statut === 'PUBLIEE' && (
+                        <button style={styles.btnAction} onClick={() => handleChangerStatut(a.id, 'LOUEE')}>
+                          🔒 Marquer louée
+                        </button>
+                      )}
+                      {a.statut === 'LOUEE' && (
+                        <button style={styles.btnAction} onClick={() => handleChangerStatut(a.id, 'PUBLIEE')}>
+                          🔓 Re-publier
+                        </button>
+                      )}
+                      <button style={styles.btnSupprAnnonce} onClick={() => handleSupprimerAnnonce(a.id)}>
+                        🗑 Supprimer
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -228,6 +259,14 @@ const styles = {
   },
   miniImg: { width: '48px', height: '48px', borderRadius: '8px', backgroundColor: '#E8DDD4', flexShrink: 0 },
   statutBadge: { fontSize: '0.72rem', fontWeight: '700', padding: '4px 10px', borderRadius: '99px' },
+  btnAction: {
+    fontSize: '0.72rem', fontWeight: '600', padding: '4px 10px', borderRadius: '6px',
+    border: '1px solid #E5DDD4', background: '#fff', cursor: 'pointer', color: '#1C1409',
+  },
+  btnSupprAnnonce: {
+    fontSize: '0.72rem', fontWeight: '600', padding: '4px 10px', borderRadius: '6px',
+    border: '1px solid #FECACA', background: '#FFF5F5', cursor: 'pointer', color: '#dc2626',
+  },
   dangerZone: {
     marginTop: '32px', border: '1px solid #FECACA', borderRadius: '14px',
     padding: '24px', backgroundColor: '#FFF5F5',

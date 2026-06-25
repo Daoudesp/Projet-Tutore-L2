@@ -1,10 +1,12 @@
 import re
 import secrets
+import os
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
+from flask_mail import Message as MailMessage
 from werkzeug.security import generate_password_hash, check_password_hash
-from extensions import db
+from extensions import db, mail
 from models.utilisateur import Utilisateur
 
 auth = Blueprint('auth', __name__)
@@ -13,7 +15,8 @@ ROLES_AUTORISES = ('locataire', 'proprietaire')
 
 
 def valider_email(email):
-    return re.match(r'^[\w\.\+\-]+@[\w\-]+\.[a-z]{2,}$', email, re.IGNORECASE)
+    # Accepte tous les formats : gmail.com, esp.sn, yahoo.fr, student.esp.sn, etc.
+    return re.match(r'^[\w\.\+\-]+@([\w\-]+\.)+[a-z]{2,}$', email, re.IGNORECASE)
 
 
 @auth.route('/inscription', methods=['POST'])
@@ -100,11 +103,41 @@ def forgot_password():
     utilisateur.reset_token_expire = datetime.utcnow() + timedelta(minutes=30)
     db.session.commit()
 
-    # En production : envoyer par email
-    # Pour la démonstration : retourner le token dans la réponse
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+    lien = f"{frontend_url}/reset-password?token={token}"
+
+    # Envoi de l'email
+    mail_configure = os.getenv('MAIL_USERNAME')
+    if mail_configure:
+        try:
+            msg_email = MailMessage(
+                subject='HomeLink — Réinitialisation de votre mot de passe',
+                recipients=[utilisateur.email],
+                html=f"""
+                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
+                  <h2 style="color:#E8572A">🏠 HomeLink</h2>
+                  <p>Bonjour <strong>{utilisateur.prenom}</strong>,</p>
+                  <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+                  <p>Cliquez sur le bouton ci-dessous. Ce lien est valable <strong>30 minutes</strong>.</p>
+                  <a href="{lien}"
+                     style="display:inline-block;margin:24px 0;padding:14px 28px;
+                            background:#E8572A;color:#fff;text-decoration:none;
+                            border-radius:8px;font-weight:700">
+                    Réinitialiser mon mot de passe
+                  </a>
+                  <p style="color:#6B5E4C;font-size:0.85rem">
+                    Si vous n'avez pas fait cette demande, ignorez cet email.
+                  </p>
+                </div>
+                """
+            )
+            mail.send(msg_email)
+        except Exception as e:
+            # Si l'email échoue, on log mais on ne bloque pas
+            print(f"[MAIL ERROR] {e}")
+
     return jsonify({
-        'message': 'Lien de réinitialisation généré (valable 30 minutes).',
-        'demo_token': token  # ⚠️ À remplacer par un envoi d'email en production
+        'message': 'Un lien de réinitialisation a été envoyé à votre adresse email (valable 30 minutes).'
     }), 200
 
 

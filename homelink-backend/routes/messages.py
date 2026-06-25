@@ -76,11 +76,18 @@ def get_messages():
                  .filter(Message.expediteur_id != utilisateur_id)
                  .order_by(Message.date_envoi.desc())
                  .all())
+
+        # Marquer tous comme lus
+        for msg in liste:
+            if not msg.lu:
+                msg.lu = True
+        db.session.commit()
+
         resultat = [{
             'id': msg.id,
             'contenu': msg.contenu,
             'date_envoi': msg.date_envoi.strftime('%d/%m/%Y %H:%M'),
-            'lu': msg.lu,
+            'lu': True,
             'annonce_id': msg.annonce_id,
             'annonce_titre': msg.annonce.titre if msg.annonce else '–',
             'expediteur_prenom': msg.expediteur.prenom if msg.expediteur else '?',
@@ -96,6 +103,12 @@ def get_messages():
         recus = (Message.query
                  .filter_by(destinataire_id=utilisateur_id)
                  .order_by(Message.date_envoi.desc()).all())
+
+        # Marquer les messages reçus comme lus
+        for msg in recus:
+            if not msg.lu:
+                msg.lu = True
+        db.session.commit()
 
         resultat = []
         for msg in envoyes:
@@ -116,6 +129,7 @@ def get_messages():
                 'lu': msg.lu,
                 'annonce_id': msg.annonce_id,
                 'annonce_titre': msg.annonce.titre if msg.annonce else '–',
+                'expediteur_id': msg.expediteur_id,
                 'expediteur_prenom': msg.expediteur.prenom if msg.expediteur else '?',
                 'expediteur_nom': msg.expediteur.nom if msg.expediteur else '?',
                 'type': 'recu',

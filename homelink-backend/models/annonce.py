@@ -10,6 +10,6 @@ class Annonce(db.Model):
     prix = db.Column(db.Numeric(10, 2), nullable=False)
     date_publication = db.Column(db.DateTime, server_default=db.func.now())
     date_expiration = db.Column(db.DateTime)
-    statut = db.Column(db.Enum('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'EXPIREE'), default='EN_ATTENTE')
+    statut = db.Column(db.Enum('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE'), default='EN_ATTENTE')
 
     bien = db.relationship('BienImmobilier', backref='annonces')
