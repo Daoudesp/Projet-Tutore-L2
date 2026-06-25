@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
@@ -8,6 +8,35 @@ function Register() {
   const [confirmation, setConfirmation] = useState('')
   const [inscrit, setInscrit] = useState(false)
   const [emailInscrit, setEmailInscrit] = useState('')
+  const [countdown, setCountdown] = useState(30)
+  const [peutRenvoyer, setPeutRenvoyer] = useState(false)
+  const [renvoi, setRenvoi] = useState(false)
+  const [chargementRenvoi, setChargementRenvoi] = useState(false)
+
+  useEffect(() => {
+    if (!inscrit) return
+    setPeutRenvoyer(false)
+    setCountdown(30)
+    const interval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) { clearInterval(interval); setPeutRenvoyer(true); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [inscrit, renvoi])
+
+  const handleRenvoyer = async () => {
+    setChargementRenvoi(true)
+    try {
+      await api.post('/resend-verification', { email: emailInscrit })
+      setRenvoi(r => !r)
+    } catch {
+      // silencieux
+    } finally {
+      setChargementRenvoi(false)
+    }
+  }
   const [form, setForm] = useState({
     nom: '',
     prenom: '',
@@ -65,11 +94,26 @@ function Register() {
           <p style={{ color: '#6B5E4C', textAlign: 'center', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '8px' }}>
             Un email de confirmation a été envoyé à <strong>{emailInscrit}</strong>.
           </p>
-          <p style={{ color: '#9B8E83', textAlign: 'center', fontSize: '0.85rem', marginBottom: '28px' }}>
+          <p style={{ color: '#9B8E83', textAlign: 'center', fontSize: '0.85rem', marginBottom: '24px' }}>
             Cliquez sur le lien dans l'email pour activer votre compte avant de vous connecter.
           </p>
-          <Link to="/login" style={{ display: 'block', textAlign: 'center', color: '#E8572A', fontWeight: '600', textDecoration: 'none' }}>
-            Aller à la connexion →
+
+          {peutRenvoyer ? (
+            <button
+              onClick={handleRenvoyer}
+              disabled={chargementRenvoi}
+              style={styles.btnRenvoyer}
+            >
+              {chargementRenvoi ? 'Envoi...' : '🔄 Renvoyer l\'email de confirmation'}
+            </button>
+          ) : (
+            <p style={{ textAlign: 'center', color: '#9B8E83', fontSize: '0.85rem', marginBottom: '16px' }}>
+              Pas reçu ? Vous pourrez renvoyer dans <strong style={{ color: '#E8572A' }}>{countdown}s</strong>
+            </p>
+          )}
+
+          <Link to="/login" style={{ display: 'block', textAlign: 'center', color: '#6B5E4C', fontSize: '0.9rem', textDecoration: 'none', marginTop: '12px' }}>
+            ← Retour à la connexion
           </Link>
         </div>
       </div>
@@ -170,6 +214,7 @@ const styles = {
   label: { display: 'block', fontWeight: '600', color: '#374151', marginBottom: '6px', fontSize: '0.9rem' },
   input: { width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '0.95rem', boxSizing: 'border-box', outline: 'none', color: '#1C1409' },
   btn: { width: '100%', backgroundColor: '#E8572A', color: '#fff', border: 'none', padding: '14px', borderRadius: '8px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer' },
+  btnRenvoyer: { display: 'block', width: '100%', backgroundColor: '#fff', color: '#E8572A', border: '2px solid #E8572A', padding: '12px', borderRadius: '8px', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer', marginBottom: '8px' },
   footer: { textAlign: 'center', marginTop: '24px', color: '#6b7280', fontSize: '0.9rem' },
 }
 

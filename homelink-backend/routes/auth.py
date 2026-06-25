@@ -88,6 +88,53 @@ def inscription():
     return jsonify({'message': 'Compte créé ! Vérifiez votre email pour activer votre compte.'}), 201
 
 
+@auth.route('/resend-verification', methods=['POST'])
+def resend_verification():
+    data = request.get_json()
+    email = data.get('email', '').strip().lower()
+
+    utilisateur = Utilisateur.query.filter_by(email=email).first()
+
+    # Toujours 200 pour ne pas exposer si l'email existe
+    if not utilisateur or utilisateur.email_verifie:
+        return jsonify({'message': 'Email envoyé si le compte existe.'}), 200
+
+    # Nouveau token
+    utilisateur.email_token = secrets.token_urlsafe(32)
+    db.session.commit()
+
+    mail_configure = os.getenv('MAIL_USERNAME')
+    if mail_configure:
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        lien = f"{frontend_url}/verify-email?token={utilisateur.email_token}"
+        try:
+            msg_email = MailMessage(
+                subject='HomeLink — Confirmez votre adresse email',
+                recipients=[utilisateur.email],
+                html=f"""
+                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
+                  <h2 style="color:#E8572A">🏠 HomeLink</h2>
+                  <p>Bonjour <strong>{utilisateur.prenom}</strong>,</p>
+                  <p>Voici un nouveau lien pour activer votre compte HomeLink.</p>
+                  <a href="{lien}"
+                     style="display:inline-block;margin:24px 0;padding:14px 28px;
+                            background:#E8572A;color:#fff;text-decoration:none;
+                            border-radius:8px;font-weight:700">
+                    Confirmer mon email
+                  </a>
+                  <p style="color:#6B5E4C;font-size:0.85rem">
+                    Si vous n'avez pas créé de compte, ignorez cet email.
+                  </p>
+                </div>
+                """
+            )
+            mail.send(msg_email)
+        except Exception as e:
+            print(f"[MAIL ERROR resend] {e}")
+
+    return jsonify({'message': 'Email de confirmation renvoyé.'}), 200
+
+
 @auth.route('/verify-email', methods=['GET'])
 def verify_email():
     token = request.args.get('token', '').strip()
