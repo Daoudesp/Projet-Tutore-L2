@@ -12,3 +12,4 @@ http://localhost:5173/annonces → affiche la liste des annonces
 http://localhost:5173/login → affiche la page de connexion
 
 Sans React Router DOM, tout s'affiche sur une seule page et l'URL ne change jamais.
+Flask-Mail sert à envoyer des emails depuis l'application Flask. Dans HomeLink, il a un seul rôle : quand un utilisateur clique "Mot de passe oublié" et entre son email, Flask-Mail envoie automatiquement le lien de réinitialisation à cette adresse. Sans Flask-Mail, le lien devait s'afficher à l'écran — n'importe qui pouvait le récupérer.
