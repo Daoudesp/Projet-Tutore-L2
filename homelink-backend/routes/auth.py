@@ -36,7 +36,39 @@ def inscription():
     if data['role'] not in ROLES_AUTORISES:
         return jsonify({'message': 'Rôle invalide'}), 400
 
-    if Utilisateur.query.filter_by(email=data['email'].lower().strip()).first():
+    existant = Utilisateur.query.filter_by(email=data['email'].lower().strip()).first()
+    if existant:
+        if not existant.email_verifie:
+            # Compte non vérifié — on renvoie l'email de confirmation
+            existant.email_token = secrets.token_urlsafe(32)
+            db.session.commit()
+            mail_configure = os.getenv('MAIL_USERNAME')
+            if mail_configure:
+                frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+                lien = f"{frontend_url}/verify-email?token={existant.email_token}"
+                try:
+                    msg_email = MailMessage(
+                        subject='HomeLink — Confirmez votre adresse email',
+                        recipients=[existant.email],
+                        html=f"""
+                        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
+                          <h2 style="color:#E8572A">🏠 HomeLink</h2>
+                          <p>Bonjour <strong>{existant.prenom}</strong>,</p>
+                          <p>Votre compte existe déjà mais n'a pas encore été activé.</p>
+                          <p>Cliquez ci-dessous pour confirmer votre email.</p>
+                          <a href="{lien}"
+                             style="display:inline-block;margin:24px 0;padding:14px 28px;
+                                    background:#E8572A;color:#fff;text-decoration:none;
+                                    border-radius:8px;font-weight:700">
+                            Confirmer mon email
+                          </a>
+                        </div>
+                        """
+                    )
+                    mail.send(msg_email)
+                except Exception as e:
+                    print(f"[MAIL ERROR resend inscription] {e}")
+            return jsonify({'message': 'Un email de confirmation a été renvoyé. Vérifiez votre boîte mail.', 'resend': True}), 200
         return jsonify({'message': 'Cet email est déjà utilisé'}), 400
 
     email_token = secrets.token_urlsafe(32)

@@ -1,9 +1,54 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import api from '../services/api'
 
 const QUARTIERS = ['Plateau', 'Point E', 'Mermoz', 'Médina', 'Ouakam', 'Sacré-Cœur', 'Yoff', 'Almadies', 'Ngor', 'Fann', 'HLM', 'Liberté', 'Grand Dakar']
 const TYPES = ['Chambre', 'Studio', 'Appartement', 'Villa']
+
+// Coordonnées GPS des quartiers de Dakar
+const COORDS_QUARTIERS = {
+  'Plateau':     [14.6928, -17.4467],
+  'Point E':     [14.6892, -17.4620],
+  'Mermoz':      [14.7083, -17.4794],
+  'Médina':      [14.6889, -17.4528],
+  'Ouakam':      [14.7183, -17.4928],
+  'Sacré-Cœur':  [14.7028, -17.4683],
+  'Yoff':        [14.7528, -17.4894],
+  'Almadies':    [14.7428, -17.5117],
+  'Ngor':        [14.7494, -17.5028],
+  'Fann':        [14.6944, -17.4636],
+  'HLM':         [14.7050, -17.4510],
+  'Liberté':     [14.7083, -17.4583],
+  'Grand Dakar': [14.7010, -17.4417],
+}
+
+const formatPrix = (prix) => {
+  const n = Number(prix)
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
+  if (n >= 1000) return `${Math.round(n / 1000)}k`
+  return `${n}`
+}
+
+const createPrixIcon = (prix, actif = false) => L.divIcon({
+  className: '',
+  html: `<div style="
+    background:${actif ? '#E8572A' : '#fff'};
+    color:${actif ? '#fff' : '#1C1409'};
+    border:2px solid #E8572A;
+    padding:5px 12px;
+    border-radius:20px;
+    font-weight:700;
+    font-size:0.8rem;
+    white-space:nowrap;
+    box-shadow:0 2px 8px rgba(0,0,0,0.18);
+    cursor:pointer;
+  ">${formatPrix(prix)}</div>`,
+  iconAnchor: [32, 16],
+  popupAnchor: [0, -20],
+})
 
 function Annonces() {
   const navigate = useNavigate()
@@ -11,6 +56,7 @@ function Annonces() {
   const [annonces, setAnnonces] = useState([])
   const [chargement, setChargement] = useState(true)
   const [tri, setTri] = useState('pertinence')
+  const [vue, setVue] = useState('liste') // 'liste' | 'carte'
 
   const quartier = searchParams.get('quartier') || ''
   const type = searchParams.get('type') || ''
@@ -121,20 +167,32 @@ function Annonces() {
             </div>
           )}
         </div>
-        <select
-          style={styles.triSelect}
-          value={tri}
-          onChange={(e) => setTri(e.target.value)}
-        >
-          <option value="pertinence">Tri · Pertinence</option>
-          <option value="prix_asc">Prix croissant</option>
-          <option value="prix_desc">Prix décroissant</option>
-        </select>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <select
+            style={styles.triSelect}
+            value={tri}
+            onChange={(e) => setTri(e.target.value)}
+          >
+            <option value="pertinence">Tri · Pertinence</option>
+            <option value="prix_asc">Prix croissant</option>
+            <option value="prix_desc">Prix décroissant</option>
+          </select>
+          <div style={styles.vueToggle}>
+            <button
+              style={{ ...styles.vueBtn, ...(vue === 'liste' ? styles.vueBtnActif : {}) }}
+              onClick={() => setVue('liste')}
+            >☰ Liste</button>
+            <button
+              style={{ ...styles.vueBtn, ...(vue === 'carte' ? styles.vueBtnActif : {}) }}
+              onClick={() => setVue('carte')}
+            >🗺 Carte</button>
+          </div>
+        </div>
       </div>
 
-      <div style={styles.container}>
+      <div style={vue === 'carte' ? styles.containerCarte : styles.container}>
         {chargement ? (
-          <p style={{ color: '#6B5E4C' }}>Chargement des annonces…</p>
+          <p style={{ color: '#6B5E4C', padding: '32px 48px' }}>Chargement des annonces…</p>
         ) : annonces.length === 0 ? (
           <div style={styles.vide}>
             <p>Aucune annonce trouvée.</p>
@@ -142,7 +200,7 @@ function Annonces() {
               Voir toutes les annonces
             </button>
           </div>
-        ) : (
+        ) : vue === 'liste' ? (
           <div style={styles.grid} className="annonces-grid">
             {[...annonces]
               .sort((a, b) => {
@@ -151,11 +209,7 @@ function Annonces() {
                 return 0
               })
               .map(a => (
-              <div
-                key={a.id}
-                style={styles.card}
-                onClick={() => navigate(`/annonces/${a.id}`)}
-              >
+              <div key={a.id} style={styles.card} onClick={() => navigate(`/annonces/${a.id}`)}>
                 <div style={styles.cardImg}>
                   {a.photo
                     ? <img src={a.photo} alt={a.titre} style={styles.cardPhoto} />
@@ -169,9 +223,7 @@ function Annonces() {
                 <div style={styles.cardBody}>
                   <div style={styles.cardRow}>
                     <p style={styles.cardTitre}>{a.titre}</p>
-                    <p style={styles.cardPrix}>
-                      {Number(a.prix).toLocaleString('fr-FR')}
-                    </p>
+                    <p style={styles.cardPrix}>{Number(a.prix).toLocaleString('fr-FR')}</p>
                   </div>
                   <p style={styles.cardLieu}>
                     {a.quartier || '–'}{a.surface ? ` · ${a.surface}m²` : ''}
@@ -180,6 +232,87 @@ function Annonces() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {/* CARTE */}
+            <MapContainer
+              center={[14.7167, -17.4677]}
+              zoom={13}
+              style={{ height: '55vh', width: '100%', borderRadius: '12px 12px 0 0' }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; OpenStreetMap contributors'
+              />
+              {annonces.map((a, i) => {
+                const coords = COORDS_QUARTIERS[a.quartier]
+                if (!coords) return null
+                const lat = coords[0] + (i % 5) * 0.0008
+                const lng = coords[1] + (i % 3) * 0.0008
+                return (
+                  <Marker key={a.id} position={[lat, lng]} icon={createPrixIcon(a.prix)}>
+                    <Popup>
+                      <div style={{ minWidth: '180px' }}>
+                        {a.photo && (
+                          <img src={a.photo} alt={a.titre}
+                            style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '6px', marginBottom: '8px' }}
+                          />
+                        )}
+                        <p style={{ fontWeight: '700', margin: '0 0 4px', fontSize: '0.9rem' }}>{a.titre}</p>
+                        <p style={{ color: '#E8572A', fontWeight: '700', margin: '0 0 4px' }}>
+                          {Number(a.prix).toLocaleString('fr-FR')} FCFA/mois
+                        </p>
+                        <p style={{ color: '#6B5E4C', fontSize: '0.8rem', margin: '0 0 10px' }}>
+                          {a.quartier}{a.surface ? ` · ${a.surface}m²` : ''}{a.meuble ? ' · Meublé' : ''}
+                        </p>
+                        <button
+                          onClick={() => navigate(`/annonces/${a.id}`)}
+                          style={{ width: '100%', backgroundColor: '#E8572A', color: '#fff', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '0.85rem' }}
+                        >
+                          Voir l'annonce →
+                        </button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              })}
+            </MapContainer>
+
+            {/* LISTE SOUS LA CARTE */}
+            <div style={{ backgroundColor: '#fff', borderRadius: '0 0 12px 12px', border: '1px solid #E5DDD4', borderTop: 'none' }}>
+              <div style={{ padding: '16px 20px 8px', borderBottom: '1px solid #F3EDE6' }}>
+                <p style={{ fontWeight: '700', color: '#1C1409', margin: 0, fontSize: '1rem' }}>
+                  {annonces.length} logement{annonces.length > 1 ? 's' : ''} trouvé{annonces.length > 1 ? 's' : ''}
+                </p>
+              </div>
+              <div style={{ maxHeight: '340px', overflowY: 'auto', padding: '8px 0' }}>
+                {annonces.map(a => (
+                  <div
+                    key={a.id}
+                    onClick={() => navigate(`/annonces/${a.id}`)}
+                    style={styles.carteListItem}
+                  >
+                    <div style={styles.carteListImg}>
+                      {a.photo
+                        ? <img src={a.photo} alt={a.titre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <div style={{ width: '100%', height: '100%', backgroundColor: '#E8DDD4', backgroundImage: 'repeating-linear-gradient(45deg,#D4C5B8 0,#D4C5B8 1px,transparent 0,transparent 50%)', backgroundSize: '12px 12px' }} />
+                      }
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: '600', color: '#1C1409', margin: '0 0 2px', fontSize: '0.9rem' }}>{a.titre}</p>
+                      <p style={{ color: '#6B5E4C', fontSize: '0.8rem', margin: '0 0 4px' }}>
+                        {a.quartier}{a.surface ? ` · ${a.surface}m²` : ''}{a.meuble ? ' · Meublé' : ''}
+                      </p>
+                      <span style={{ backgroundColor: '#DCFCE7', color: '#166534', fontSize: '0.7rem', fontWeight: '600', padding: '2px 8px', borderRadius: '99px', marginRight: '8px' }}>Disponible</span>
+                    </div>
+                    <p style={{ color: '#E8572A', fontWeight: '700', fontSize: '1rem', margin: 0, whiteSpace: 'nowrap' }}>
+                      {Number(a.prix).toLocaleString('fr-FR')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -347,6 +480,12 @@ const styles = {
   cardTitre: { fontWeight: '600', color: '#1C1409', fontSize: '0.95rem', margin: 0 },
   cardPrix: { color: '#E8572A', fontWeight: '700', fontSize: '1rem', margin: 0, whiteSpace: 'nowrap' },
   cardLieu: { color: '#6B5E4C', fontSize: '0.83rem', margin: 0 },
+  containerCarte: { maxWidth: '1200px', margin: '0 auto', padding: '0 48px 60px' },
+  carteListItem: { display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 20px', borderBottom: '1px solid #F3EDE6', cursor: 'pointer', transition: 'background 0.15s' },
+  carteListImg: { width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 },
+  vueToggle: { display: 'flex', border: '1px solid #E5DDD4', borderRadius: '8px', overflow: 'hidden' },
+  vueBtn: { padding: '8px 16px', border: 'none', background: '#fff', cursor: 'pointer', fontSize: '0.88rem', color: '#6B5E4C', fontWeight: '500' },
+  vueBtnActif: { backgroundColor: '#E8572A', color: '#fff', fontWeight: '700' },
   vide: { textAlign: 'center', padding: '80px 0', color: '#6B5E4C' },
   btnOrange: {
     backgroundColor: '#E8572A',
