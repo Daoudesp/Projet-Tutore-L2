@@ -17,7 +17,7 @@ function Admin() {
   const [utilisateurs, setUtilisateurs] = useState([])
   const [quartiers, setQuartiers] = useState([])
   const [stats, setStats] = useState({ en_attente: 0, publiees: 0, proprietaires: 0, locataires: 0 })
-  const [newQuartier, setNewQuartier] = useState({ nom: '', commune: '', prix_moyen_loyer: '', description: '' })
+  const [newQuartier, setNewQuartier] = useState({ nom: '', commune: '', description: '' })
   const [quartierSucces, setQuartierSucces] = useState('')
   const [quartierErreur, setQuartierErreur] = useState('')
   const [hovered, setHovered] = useState(null)
@@ -46,7 +46,7 @@ function Admin() {
     try {
       await api.post('/quartiers', newQuartier)
       setQuartierSucces(`Quartier "${newQuartier.nom}" ajouté.`)
-      setNewQuartier({ nom: '', commune: '', prix_moyen_loyer: '', description: '' })
+      setNewQuartier({ nom: '', commune: '', description: '' })
       api.get('/quartiers').then(res => setQuartiers(res.data)).catch(() => {})
     } catch (err) {
       setQuartierErreur(err.response?.data?.message || 'Erreur lors de l\'ajout')
@@ -317,16 +317,6 @@ function Admin() {
                     />
                   </div>
                   <div>
-                    <label style={styles.formLabel}>Prix moyen loyer (FCFA)</label>
-                    <input
-                      style={styles.formInput}
-                      type="number"
-                      placeholder="ex: 150000"
-                      value={newQuartier.prix_moyen_loyer}
-                      onChange={(e) => setNewQuartier({ ...newQuartier, prix_moyen_loyer: e.target.value })}
-                    />
-                  </div>
-                  <div>
                     <label style={styles.formLabel}>Description</label>
                     <input
                       style={styles.formInput}
@@ -350,7 +340,7 @@ function Admin() {
                   <table style={styles.table}>
                     <thead>
                       <tr style={styles.theadRow}>
-                        {['NOM', 'COMMUNE', 'PRIX MOYEN', 'DESCRIPTION'].map(col => (
+                        {['NOM', 'COMMUNE', 'DESCRIPTION'].map(col => (
                           <th key={col} style={styles.th}>{col}</th>
                         ))}
                       </tr>
@@ -360,11 +350,6 @@ function Admin() {
                         <tr key={q.id} style={styles.tr}>
                           <td style={styles.td}><span style={{ fontWeight: '600', color: '#1C1409', fontSize: '0.9rem' }}>{q.nom}</span></td>
                           <td style={styles.td}><span style={{ color: '#4A4035', fontSize: '0.9rem' }}>{q.commune || '–'}</span></td>
-                          <td style={styles.td}>
-                            {q.prix_moyen_loyer
-                              ? <span style={{ color: '#E8572A', fontWeight: '700' }}>{Number(q.prix_moyen_loyer).toLocaleString('fr-FR')} FCFA</span>
-                              : <span style={{ color: '#9B8E83' }}>–</span>}
-                          </td>
                           <td style={styles.td}><span style={{ color: '#6B5E4C', fontSize: '0.85rem' }}>{q.description || '–'}</span></td>
                         </tr>
                       ))}

@@ -20,6 +20,9 @@ def envoyer_message():
     if not expediteur:
         return jsonify({'message': 'Utilisateur introuvable'}), 404
 
+    if expediteur.role == 'administrateur':
+        return jsonify({'message': 'Les administrateurs ne peuvent pas envoyer de messages'}), 403
+
     if not data.get('contenu', '').strip():
         return jsonify({'message': 'Le message ne peut pas être vide'}), 400
 

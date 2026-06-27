@@ -8,7 +8,9 @@ function Favoris() {
   const [chargement, setChargement] = useState(true)
 
   useEffect(() => {
-    if (!localStorage.getItem('token')) { navigate('/login'); return }
+    const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!token || user.role !== 'locataire') { navigate('/'); return }
     chargerFavoris()
   }, [])
 

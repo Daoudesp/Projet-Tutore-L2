@@ -40,6 +40,9 @@ def ajouter_favori(annonce_id):
 @jwt_required()
 def get_favoris():
     locataire_id = int(get_jwt_identity())
+    u = db.session.get(Utilisateur, locataire_id)
+    if not u or u.role != 'locataire':
+        return jsonify({'message': 'Seuls les locataires peuvent consulter leurs favoris'}), 403
     liste = Favori.query.filter_by(locataire_id=locataire_id).all()
 
     resultat = []
@@ -64,6 +67,9 @@ def get_favoris():
 @jwt_required()
 def supprimer_favori(annonce_id):
     locataire_id = int(get_jwt_identity())
+    u = db.session.get(Utilisateur, locataire_id)
+    if not u or u.role != 'locataire':
+        return jsonify({'message': 'Seuls les locataires peuvent supprimer des favoris'}), 403
 
     favori = Favori.query.filter_by(locataire_id=locataire_id, annonce_id=annonce_id).first()
     if not favori:

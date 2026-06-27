@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models.avis import Avis
+from models.annonce import Annonce
 from models.utilisateur import Utilisateur
 from models.bien_immobilier import BienImmobilier
 
@@ -20,12 +21,42 @@ def avis_to_dict(a):
     }
 
 
+# Vérifier si le locataire connecté peut laisser un avis sur un bien
+@avis.route('/avis/eligibilite/<int:bien_id>', methods=['GET'])
+@jwt_required()
+def verifier_eligibilite(bien_id):
+    locataire_id = int(get_jwt_identity())
+    u = db.session.get(Utilisateur, locataire_id)
+    if not u or u.role != 'locataire':
+        return jsonify({'peut': False, 'message': 'Réservé aux locataires'}), 200
+
+    # Déjà laissé un avis ?
+    existant = Avis.query.filter_by(locataire_id=locataire_id, bien_id=bien_id).first()
+    if existant:
+        return jsonify({'peut': False, 'message': 'Vous avez déjà laissé un avis'}), 200
+
+    # Chercher une annonce de ce bien où ce locataire est désigné ET l'annonce est PUBLIEE
+    annonce_eligible = Annonce.query.filter_by(
+        bien_id=bien_id,
+        locataire_loue_id=locataire_id,
+        statut='PUBLIEE'
+    ).first()
+
+    if not annonce_eligible:
+        return jsonify({
+            'peut': False,
+            'message': 'Vous pouvez laisser un avis uniquement après avoir quitté le logement'
+        }), 200
+
+    return jsonify({'peut': True}), 200
+
+
 # Déposer un avis
 @avis.route('/avis', methods=['POST'])
 @jwt_required()
 def deposer_avis():
     locataire_id = int(get_jwt_identity())
-    u = Utilisateur.query.get(locataire_id)
+    u = db.session.get(Utilisateur, locataire_id)
     if not u or u.role != 'locataire':
         return jsonify({'message': 'Seuls les locataires peuvent déposer un avis'}), 403
 
@@ -42,6 +73,15 @@ def deposer_avis():
     existant = Avis.query.filter_by(locataire_id=locataire_id, bien_id=bien_id).first()
     if existant:
         return jsonify({'message': 'Vous avez déjà laissé un avis pour ce logement'}), 400
+
+    # Vérifier éligibilité : doit être locataire_loue_id et annonce repassée PUBLIEE
+    annonce_eligible = Annonce.query.filter_by(
+        bien_id=bien_id,
+        locataire_loue_id=locataire_id,
+        statut='PUBLIEE'
+    ).first()
+    if not annonce_eligible:
+        return jsonify({'message': 'Vous ne pouvez pas laisser un avis sur ce logement'}), 403
 
     nouvel_avis = Avis(
         locataire_id=locataire_id,

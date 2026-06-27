@@ -30,8 +30,6 @@ class Proprietaire {
 }
 
 class Locataire {
-  profession : String
-  revenuMensuel : Double
 }
 
 class Administrateur {
@@ -54,7 +52,6 @@ class Quartier {
   id : Long
   nom : String
   commune : String
-  prixMoyenLoyer : Double
   description : String
 }
 
@@ -88,6 +85,11 @@ class Avis {
   date : Date
 }
 
+class Favori {
+  id : Long
+  dateAjout : Date
+}
+
 class Date <<DataType>> {
 }
 
@@ -102,6 +104,7 @@ class StatutAnnonce <<enumeration>> {
   EN_ATTENTE
   PUBLIEE
   SUSPENDUE
+  LOUEE
   EXPIREE
 }
 
@@ -124,9 +127,13 @@ Proprietaire "1" -- "0..*" BienImmobilier : posseder
 BienImmobilier "0..*" -- "1" Quartier : se situer dans
 BienImmobilier "1" -- "0..*" Annonce : faire l'objet de
 Annonce "1" *-- "1..*" Photo : contenir
-Annonce "1" -- "0..*" Message : recevoir
 Utilisateur "1" -- "0..*" Message : envoyer
+Utilisateur "1" -- "0..*" Message : recevoir
+Message "0..*" -- "1" Annonce : concerner
 Avis "0..*" -- "1" BienImmobilier : concerner
 Locataire "1" -- "0..*" Avis : rédiger
+Locataire "1" -- "0..*" Favori : ajouter
+Annonce "1" -- "0..*" Favori : être mis en
+Annonce "0..*" -- "0..1" Locataire : louée à
 
 @enduml

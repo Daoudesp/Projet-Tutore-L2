@@ -1,0 +1,159 @@
+@startuml HomeLink_Classes_v4
+hide methods
+skinparam CircledCharacterFontSize 0
+skinparam CircledCharacterRadius 0
+skinparam backgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #000000
+skinparam ArrowColor #000000
+skinparam ClassFontColor #000000
+skinparam ClassAttributeFontColor #000000
+skinparam ClassHeaderBackgroundColor #FFFFFF
+skinparam stereotypeCBackgroundColor #FFFFFF
+skinparam stereotypeABackgroundColor #FFFFFF
+skinparam classAttributeIconSize 0
+scale 2
+
+top to bottom direction
+
+' ── Énumérations gauche ───────────────────────────────────
+together {
+  class Date <<DataType>> {}
+  class TypeLogement <<enumeration>> {
+    CHAMBRE
+    STUDIO
+    APPARTEMENT
+    VILLA
+  }
+  class StatutAnnonce <<enumeration>> {
+    EN_ATTENTE
+    PUBLIEE
+    SUSPENDUE
+    LOUEE
+    EXPIREE
+  }
+}
+
+' ── Énumérations droite ───────────────────────────────────
+together {
+  class StatutMessage <<enumeration>> {
+    ENVOYE
+    LU
+    ARCHIVE
+  }
+  class TypeUtilisateur <<enumeration>> {
+    ADMIN
+    MODERATEUR
+  }
+}
+
+' ── Classe principale ─────────────────────────────────────
+abstract class Utilisateur {
+  id : Long
+  nom : String
+  prenom : String
+  email : String
+  motDePasse : String
+  telephone : String
+  dateInscription : Date
+}
+
+' ── Message et Administrateur (droite de Utilisateur) ────
+together {
+  class Administrateur {
+    niveau : String
+  }
+  class Message {
+    id : Long
+    contenu : String
+    dateEnvoi : Date
+    lu : Boolean
+  }
+}
+
+' ── Sous-classes (même ligne) ─────────────────────────────
+together {
+  class Proprietaire {
+    numeroPiece : String
+    adresseProfessionnelle : String
+    noteGlobale : Double
+  }
+  class Locataire {}
+}
+
+' ── Bien immobilier ───────────────────────────────────────
+class BienImmobilier {
+  id : Long
+  adresse : String
+  ville : String
+  surface : Double
+  nombrePieces : Integer
+  nombreSallesDeBain : Integer
+  etage : Integer
+  meuble : Boolean
+  typeLogement : TypeLogement
+}
+
+class Quartier {
+  id : Long
+  nom : String
+  commune : String
+  description : String
+}
+
+' ── Annonce et Photo (même ligne) ────────────────────────
+together {
+  class Annonce {
+    id : Long
+    titre : String
+    description : String
+    prix : Double
+    datePublication : Date
+    dateExpiration : Date
+    statut : StatutAnnonce
+  }
+  class Photo {
+    id : Long
+    url : String
+    ordre : Integer
+  }
+}
+
+' ── Avis et Favori (même ligne, bas) ─────────────────────
+together {
+  class Avis {
+    id : Long
+    note : Integer
+    commentaire : String
+    date : Date
+  }
+  class Favori {
+    id : Long
+    dateAjout : Date
+  }
+}
+
+' ── Héritage ──────────────────────────────────────────────
+Utilisateur <|-left-  Proprietaire
+Utilisateur <|--      Locataire
+Utilisateur <|-right- Administrateur
+
+' ── Message ───────────────────────────────────────────────
+Utilisateur "1" -right-> "0..*" Message : envoyer
+Utilisateur "1" <-right- "0..*" Message : recevoir
+Message "0..*" -down-> "1" Annonce : concerner
+
+' ── Chaîne principale ─────────────────────────────────────
+Proprietaire  "1"    -down->  "0..*" BienImmobilier : posseder
+BienImmobilier "0..*" -left-> "1"   Quartier        : se situer dans
+BienImmobilier "1"   -right-> "0..*" Annonce        : faire l'objet de
+Annonce "1" *-right-> "1..*" Photo                  : contenir
+
+' ── Locataire ─────────────────────────────────────────────
+Locataire "1"   -down->  "0..*" Avis   : rédiger
+Locataire "1"   -right-> "0..*" Favori : ajouter
+Avis "0..*"     -left->  "1"   BienImmobilier : concerner
+Annonce "1"     -down->  "0..*" Favori : être mis en
+Annonce "0..*"  -up->    "0..1" Locataire : louée à
+
+@enduml

@@ -16,6 +16,8 @@ function DetailAnnonce() {
   const [commentaireForm, setCommentaireForm] = useState('')
   const [avisEnvoye, setAvisEnvoye] = useState(false)
   const [avisErreur, setAvisErreur] = useState('')
+  const [peutLaisserAvis, setPeutLaisserAvis] = useState(false)
+  const [raisonAvis, setRaisonAvis] = useState('')
   const token = localStorage.getItem('token')
   const userLocal = JSON.parse(localStorage.getItem('user') || '{}')
 
@@ -27,6 +29,16 @@ function DetailAnnonce() {
           api.get(`/avis/${res.data.bien_id}`)
             .then(r => setAvis(r.data))
             .catch(() => {})
+
+          // Vérifier si le locataire connecté peut laisser un avis
+          if (token && userLocal.role === 'locataire') {
+            api.get(`/avis/eligibilite/${res.data.bien_id}`)
+              .then(r => {
+                setPeutLaisserAvis(r.data.peut)
+                if (!r.data.peut) setRaisonAvis(r.data.message || '')
+              })
+              .catch(() => {})
+          }
         }
       })
       .catch(() => navigate('/annonces'))
@@ -228,8 +240,13 @@ function DetailAnnonce() {
                 </p>
               )}
 
-              {/* Formulaire — locataire uniquement */}
-              {token && userLocal.role === 'locataire' && !avisEnvoye && (
+              {/* Formulaire — locataire éligible uniquement */}
+              {token && userLocal.role === 'locataire' && !avisEnvoye && !peutLaisserAvis && raisonAvis && (
+                <p style={{ backgroundColor: '#F5F0E8', color: '#6B5E4C', padding: '12px 16px', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '8px' }}>
+                  ℹ️ {raisonAvis}
+                </p>
+              )}
+              {token && userLocal.role === 'locataire' && !avisEnvoye && peutLaisserAvis && (
                 <div style={styles.avisFormBox}>
                   <h4 style={{ fontWeight: '700', color: '#1C1409', marginBottom: '16px', fontSize: '0.95rem' }}>
                     Laisser un avis
@@ -302,6 +319,10 @@ function DetailAnnonce() {
                 <p style={{ color: '#6B5E4C', fontSize: '0.9rem', padding: '16px 0' }}>
                   Vous êtes propriétaire. Seuls les locataires peuvent contacter un propriétaire.
                 </p>
+              ) : userLocal.role === 'administrateur' ? (
+                <p style={{ color: '#6B5E4C', fontSize: '0.9rem', padding: '16px 0' }}>
+                  Les administrateurs ne peuvent pas contacter les propriétaires.
+                </p>
               ) : envoye ? (
                 <div style={styles.successBox}>
                   ✅ Message envoyé ! Le propriétaire vous répondra bientôt.
@@ -322,12 +343,14 @@ function DetailAnnonce() {
                 </form>
               )}
 
-              <button
-                style={favori ? styles.btnFavoriActif : styles.btnFavori}
-                onClick={handleFavori}
-              >
-                {favori ? '❤️ Ajouté aux favoris' : '🤍 Ajouter aux favoris'}
-              </button>
+              {token && userLocal.role === 'locataire' && (
+                <button
+                  style={favori ? styles.btnFavoriActif : styles.btnFavori}
+                  onClick={handleFavori}
+                >
+                  {favori ? '❤️ Ajouté aux favoris' : '🤍 Ajouter aux favoris'}
+                </button>
+              )}
             </div>
           </div>
 

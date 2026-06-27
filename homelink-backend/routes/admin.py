@@ -4,6 +4,8 @@ from extensions import db
 from models.annonce import Annonce
 from models.utilisateur import Utilisateur
 from models.photo import Photo
+from sqlalchemy.orm import joinedload
+from models.bien_immobilier import BienImmobilier
 
 admin = Blueprint('admin', __name__)
 
@@ -60,14 +62,17 @@ def get_annonces_en_attente():
 
     statut_filtre = req.args.get('statut')
     STATUTS_VALIDES = ('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE')
+    opts = joinedload(Annonce.bien).joinedload(BienImmobilier.quartier)
     if statut_filtre:
         if statut_filtre not in STATUTS_VALIDES:
             return jsonify({'message': 'Statut invalide'}), 400
-        liste = Annonce.query.filter_by(statut=statut_filtre).order_by(Annonce.date_publication.desc()).all()
+        liste = Annonce.query.options(opts).filter_by(statut=statut_filtre).order_by(Annonce.date_publication.desc()).all()
     else:
-        liste = Annonce.query.order_by(Annonce.date_publication.desc()).all()
+        liste = Annonce.query.options(opts).order_by(Annonce.date_publication.desc()).all()
 
     def annonce_dict(a):
+        if not a.bien:
+            return None
         photo = Photo.query.filter_by(annonce_id=a.id).order_by(Photo.ordre).first()
         return {
             'id': a.id,
@@ -75,11 +80,11 @@ def get_annonces_en_attente():
             'prix': float(a.prix),
             'statut': a.statut,
             'type_logement': a.bien.type_logement,
-            'quartier': a.bien.quartier.nom,
+            'quartier': a.bien.quartier.nom if a.bien.quartier else '–',
             'photo': photo.url if photo else None,
         }
 
-    return jsonify([annonce_dict(a) for a in liste]), 200
+    return jsonify([d for d in (annonce_dict(a) for a in liste) if d is not None]), 200
 
 
 # Valider une annonce

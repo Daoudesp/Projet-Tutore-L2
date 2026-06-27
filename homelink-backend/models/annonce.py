@@ -11,5 +11,7 @@ class Annonce(db.Model):
     date_publication = db.Column(db.DateTime, server_default=db.func.now())
     date_expiration = db.Column(db.DateTime)
     statut = db.Column(db.Enum('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE'), default='EN_ATTENTE')
+    locataire_loue_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'), nullable=True)
 
     bien = db.relationship('BienImmobilier', backref='annonces')
+    locataire_loue = db.relationship('Utilisateur', foreign_keys=[locataire_loue_id])

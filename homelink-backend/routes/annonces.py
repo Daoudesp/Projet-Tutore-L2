@@ -5,6 +5,9 @@ from models.annonce import Annonce
 from models.bien_immobilier import BienImmobilier
 from models.photo import Photo
 from models.utilisateur import Utilisateur
+from models.message import Message
+from models.quartier import Quartier
+from sqlalchemy.orm import joinedload
 
 annonces = Blueprint('annonces', __name__)
 
@@ -14,7 +17,8 @@ STATUTS_VALIDES = ('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE')
 # Récupérer toutes les annonces publiées
 @annonces.route('/annonces', methods=['GET'])
 def get_annonces():
-    liste = Annonce.query.filter_by(statut='PUBLIEE').all()
+    opts = joinedload(Annonce.bien).joinedload(BienImmobilier.quartier)
+    liste = Annonce.query.options(opts).filter_by(statut='PUBLIEE').all()
     resultat = []
     for annonce in liste:
         if not annonce.bien or not annonce.bien.quartier:
@@ -70,6 +74,10 @@ def get_annonce(id):
 def publier_annonce():
     data = request.get_json()
     utilisateur_id = int(get_jwt_identity())
+
+    u = db.session.get(Utilisateur, utilisateur_id)
+    if not u or u.role != 'proprietaire':
+        return jsonify({'message': 'Réservé aux propriétaires'}), 403
 
     if not data.get('titre', '').strip():
         return jsonify({'message': 'Le titre est obligatoire'}), 400
@@ -139,12 +147,54 @@ def changer_statut(id):
             return jsonify({'message': 'Action non autorisée'}), 403
         if annonce.statut not in ('PUBLIEE', 'LOUEE'):
             return jsonify({'message': 'Seules les annonces publiées peuvent être modifiées'}), 400
+
+        # Quand on marque LOUEE : enregistrer le locataire désigné
+        if nouveau_statut == 'LOUEE':
+            locataire_id = data.get('locataire_id')
+            if not locataire_id:
+                return jsonify({'message': 'Veuillez sélectionner le locataire qui a loué ce logement'}), 400
+            locataire = db.session.get(Utilisateur, int(locataire_id))
+            if not locataire or locataire.role != 'locataire':
+                return jsonify({'message': 'Locataire introuvable'}), 400
+            annonce.locataire_loue_id = int(locataire_id)
+        # Quand on repasse PUBLIEE : on garde locataire_loue_id (pour l'avis)
     else:
         return jsonify({'message': 'Action non autorisée'}), 403
 
     annonce.statut = nouveau_statut
     db.session.commit()
     return jsonify({'message': f'Statut mis à jour : {nouveau_statut}'}), 200
+
+
+# Locataires ayant messagé pour une annonce (pour choisir qui a loué)
+@annonces.route('/annonces/<int:id>/locataires-messages', methods=['GET'])
+@jwt_required()
+def get_locataires_messages(id):
+    utilisateur_id = int(get_jwt_identity())
+    annonce = db.session.get(Annonce, id)
+    if not annonce:
+        return jsonify({'message': 'Annonce introuvable'}), 404
+    if annonce.bien.proprietaire_id != utilisateur_id:
+        return jsonify({'message': 'Action non autorisée'}), 403
+
+    messages = Message.query.filter_by(annonce_id=id).filter(
+        Message.expediteur_id != utilisateur_id
+    ).all()
+
+    # Dédupliquer par locataire
+    vus = set()
+    locataires = []
+    for m in messages:
+        if m.expediteur_id not in vus and m.expediteur and m.expediteur.role == 'locataire':
+            vus.add(m.expediteur_id)
+            locataires.append({
+                'id': m.expediteur_id,
+                'prenom': m.expediteur.prenom,
+                'nom': m.expediteur.nom,
+                'email': m.expediteur.email,
+            })
+
+    return jsonify(locataires), 200
 
 
 # Supprimer une annonce (propriétaire = ses annonces | admin = toutes)

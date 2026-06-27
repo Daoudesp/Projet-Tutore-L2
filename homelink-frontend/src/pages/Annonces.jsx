@@ -202,7 +202,7 @@ function Annonces() {
             value={tri}
             onChange={(e) => setTri(e.target.value)}
           >
-            <option value="pertinence">Tri · Pertinence</option>
+            <option value="pertinence">Tri · Par défaut</option>
             <option value="prix_asc">Prix croissant</option>
             <option value="prix_desc">Prix décroissant</option>
           </select>

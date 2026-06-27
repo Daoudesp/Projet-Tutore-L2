@@ -29,7 +29,8 @@ function PublierAnnonce() {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (!token) { navigate('/login'); return }
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    if (!token || user.role !== 'proprietaire') { navigate('/'); return }
     api.get('/quartiers').then(res => setQuartiers(res.data)).catch(() => {})
   }, [])
 

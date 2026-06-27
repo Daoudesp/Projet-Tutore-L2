@@ -10,6 +10,8 @@ function Profil() {
   const [erreur, setErreur] = useState('')
   const [confirmSuppr, setConfirmSuppr] = useState(false)
   const [supprErreur, setSupprErreur] = useState('')
+  const [modalLouerAnnonce, setModalLouerAnnonce] = useState(null) // { id, locataires: [] }
+  const [locataireSelectionne, setLocataireSelectionne] = useState('')
   const user = JSON.parse(localStorage.getItem('user') || '{}')
 
   useEffect(() => {
@@ -39,14 +41,33 @@ function Profil() {
     return /^(7[0-9]{8}|33[0-9]{7})$/.test(clean)
   }
 
-  const handleChangerStatut = async (annonceId, statut) => {
+  const handleChangerStatut = async (annonceId, statut, locataireId = null) => {
     try {
-      await api.put(`/annonces/${annonceId}/statut`, { statut })
+      const body = { statut }
+      if (locataireId) body.locataire_id = locataireId
+      await api.put(`/annonces/${annonceId}/statut`, body)
       const res = await api.get('/profil/annonces')
       setAnnonces(res.data)
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur')
     }
+  }
+
+  const ouvrirModalLouer = async (annonceId) => {
+    try {
+      const res = await api.get(`/annonces/${annonceId}/locataires-messages`)
+      setModalLouerAnnonce({ id: annonceId, locataires: res.data })
+      setLocataireSelectionne(res.data[0]?.id || '')
+    } catch {
+      alert('Erreur lors du chargement des locataires')
+    }
+  }
+
+  const confirmerLouer = async () => {
+    if (!locataireSelectionne) { alert('Sélectionnez un locataire'); return }
+    await handleChangerStatut(modalLouerAnnonce.id, 'LOUEE', locataireSelectionne)
+    setModalLouerAnnonce(null)
+    setLocataireSelectionne('')
   }
 
   const handleSupprimerAnnonce = async (annonceId) => {
@@ -90,6 +111,7 @@ function Profil() {
   }
 
   return (
+    <>
     <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh', padding: '48px 24px' }}>
       <div style={styles.container}>
 
@@ -172,7 +194,7 @@ function Profil() {
                         {a.statut === 'LOUEE' ? 'Louée' : a.statut === 'PUBLIEE' ? 'Publiée' : a.statut === 'SUSPENDUE' ? 'Suspendue' : 'En attente'}
                       </span>
                       {a.statut === 'PUBLIEE' && (
-                        <button style={styles.btnAction} onClick={() => handleChangerStatut(a.id, 'LOUEE')}>
+                        <button style={styles.btnAction} onClick={() => ouvrirModalLouer(a.id)}>
                           🔒 Marquer louée
                         </button>
                       )}
@@ -224,6 +246,58 @@ function Profil() {
 
       </div>
     </div>
+
+    {/* MODAL MARQUER LOUÉE */}
+    {modalLouerAnnonce && (
+      <div style={styles.modalOverlay}>
+        <div style={styles.modalBox}>
+          <h3 style={{ color: '#1C1409', fontWeight: '700', marginBottom: '12px' }}>
+            🔒 Marquer comme louée
+          </h3>
+          <p style={{ color: '#6B5E4C', fontSize: '0.9rem', marginBottom: '20px' }}>
+            Sélectionnez le locataire qui a loué ce logement. Seul lui pourra laisser un avis après son départ.
+          </p>
+
+          {modalLouerAnnonce.locataires.length === 0 ? (
+            <p style={{ color: '#dc2626', fontSize: '0.88rem', marginBottom: '20px' }}>
+              Aucun locataire n'a envoyé de message pour cette annonce.
+            </p>
+          ) : (
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontWeight: '600', color: '#374151', marginBottom: '8px', fontSize: '0.88rem' }}>
+                Locataire
+              </label>
+              <select
+                style={{ width: '100%', padding: '10px', border: '1px solid #E5DDD4', borderRadius: '8px', fontSize: '0.95rem' }}
+                value={locataireSelectionne}
+                onChange={e => setLocataireSelectionne(e.target.value)}
+              >
+                {modalLouerAnnonce.locataires.map(l => (
+                  <option key={l.id} value={l.id}>
+                    {l.prenom} {l.nom} — {l.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {modalLouerAnnonce.locataires.length > 0 && (
+              <button style={{ ...styles.btnOrange, flex: 1 }} onClick={confirmerLouer}>
+                Confirmer
+              </button>
+            )}
+            <button
+              style={{ flex: 1, backgroundColor: '#fff', border: '1px solid #E5DDD4', borderRadius: '8px', padding: '12px', cursor: 'pointer', color: '#6B5E4C', fontWeight: '600' }}
+              onClick={() => { setModalLouerAnnonce(null); setLocataireSelectionne('') }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 
@@ -285,6 +359,14 @@ const styles = {
   btnAnnuler: {
     backgroundColor: '#F3EDE6', color: '#1C1409', border: 'none',
     padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem',
+  },
+  modalOverlay: {
+    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+  },
+  modalBox: {
+    backgroundColor: '#fff', borderRadius: '16px', padding: '32px',
+    width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
   },
 }
 

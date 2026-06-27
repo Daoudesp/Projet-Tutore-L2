@@ -11,7 +11,6 @@ def to_dict(q):
         'id': q.id,
         'nom': q.nom,
         'commune': q.commune,
-        'prix_moyen_loyer': float(q.prix_moyen_loyer) if q.prix_moyen_loyer else None,
         'description': q.description
     }
 
@@ -43,7 +42,6 @@ def ajouter_quartier():
     q = Quartier(
         nom=nom,
         commune=data.get('commune', '').strip() or None,
-        prix_moyen_loyer=data.get('prix_moyen_loyer') or None,
         description=data.get('description', '').strip() or None,
     )
     db.session.add(q)
