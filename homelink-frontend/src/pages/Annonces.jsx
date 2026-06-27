@@ -57,27 +57,34 @@ function Annonces() {
   const [chargement, setChargement] = useState(true)
   const [tri, setTri] = useState('pertinence')
   const [vue, setVue] = useState('liste') // 'liste' | 'carte'
+  const [page, setPage] = useState(1)
+  const PAR_PAGE = 9
 
   const quartier = searchParams.get('quartier') || ''
   const type = searchParams.get('type') || ''
   const budget = searchParams.get('budget') || ''
+  const prixMin = searchParams.get('prixMin') || ''
 
   // État local du formulaire (pré-rempli depuis l'URL)
   const [formQuartier, setFormQuartier] = useState(quartier)
   const [formType, setFormType] = useState(type)
   const [formBudget, setFormBudget] = useState(budget)
+  const [formPrixMin, setFormPrixMin] = useState(prixMin)
 
   const handleRecherche = (e) => {
     e.preventDefault()
     const params = new URLSearchParams()
     if (formQuartier) params.append('quartier', formQuartier)
     if (formType) params.append('type', formType)
+    if (formPrixMin) params.append('prixMin', formPrixMin)
     if (formBudget) params.append('budget', formBudget)
+    setPage(1)
     navigate(`/annonces?${params.toString()}`)
   }
 
   const handleReset = () => {
-    setFormQuartier(''); setFormType(''); setFormBudget('')
+    setFormQuartier(''); setFormType(''); setFormBudget(''); setFormPrixMin('')
+    setPage(1)
     navigate('/annonces')
   }
 
@@ -95,6 +102,9 @@ function Annonces() {
           a.type_logement?.toLowerCase() === type.toLowerCase()
         )
       }
+      if (prixMin) {
+        resultats = resultats.filter(a => Number(a.prix) >= Number(prixMin))
+      }
       if (budget) {
         resultats = resultats.filter(a => Number(a.prix) <= Number(budget))
       }
@@ -105,13 +115,21 @@ function Annonces() {
     }).finally(() => {
       setChargement(false)
     })
-  }, [quartier, type, budget])
+  }, [quartier, type, budget, prixMin])
 
   const filtresActifs = [
     quartier && { label: quartier, key: 'quartier' },
     type && { label: type, key: 'type' },
     budget && { label: `< ${Number(budget).toLocaleString('fr-FR')} FCFA`, key: 'budget' },
   ].filter(Boolean)
+
+  const annoncesTriees = [...annonces].sort((a, b) => {
+    if (tri === 'prix_asc') return a.prix - b.prix
+    if (tri === 'prix_desc') return b.prix - a.prix
+    return 0
+  })
+  const totalPages = Math.ceil(annoncesTriees.length / PAR_PAGE)
+  const annoncesPage = annoncesTriees.slice((page - 1) * PAR_PAGE, page * PAR_PAGE)
 
   return (
     <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh' }}>
@@ -136,7 +154,18 @@ function Annonces() {
           </div>
           <div style={styles.searchDivider} />
           <div style={styles.searchField}>
-            <label style={styles.searchLabel}>BUDGET MAX (FCFA)</label>
+            <label style={styles.searchLabel}>PRIX MIN (FCFA)</label>
+            <input
+              style={styles.searchInput}
+              type="number"
+              placeholder="ex: 50 000"
+              value={formPrixMin}
+              onChange={(e) => setFormPrixMin(e.target.value)}
+            />
+          </div>
+          <div style={styles.searchDivider} />
+          <div style={styles.searchField}>
+            <label style={styles.searchLabel}>PRIX MAX (FCFA)</label>
             <input
               style={styles.searchInput}
               type="number"
@@ -201,38 +230,55 @@ function Annonces() {
             </button>
           </div>
         ) : vue === 'liste' ? (
-          <div style={styles.grid} className="annonces-grid">
-            {[...annonces]
-              .sort((a, b) => {
-                if (tri === 'prix_asc') return a.prix - b.prix
-                if (tri === 'prix_desc') return b.prix - a.prix
-                return 0
-              })
-              .map(a => (
-              <div key={a.id} style={styles.card} onClick={() => navigate(`/annonces/${a.id}`)}>
-                <div style={styles.cardImg}>
-                  {a.photo
-                    ? <img src={a.photo} alt={a.titre} style={styles.cardPhoto} />
-                    : <div style={styles.cardImgPlaceholder} />
-                  }
-                  <div style={styles.cardBadges}>
-                    <span style={styles.badgeDisponible}>Disponible</span>
-                    <span style={styles.badgeVerifie}>✔ Vérifié</span>
+          <>
+            <div style={styles.grid} className="annonces-grid">
+              {annoncesPage.map(a => (
+                <div key={a.id} style={styles.card} onClick={() => navigate(`/annonces/${a.id}`)}>
+                  <div style={styles.cardImg}>
+                    {a.photo
+                      ? <img src={a.photo} alt={a.titre} style={styles.cardPhoto} />
+                      : <div style={styles.cardImgPlaceholder} />
+                    }
+                    <div style={styles.cardBadges}>
+                      <span style={styles.badgeDisponible}>Disponible</span>
+                      <span style={styles.badgeVerifie}>✔ Vérifié</span>
+                    </div>
+                  </div>
+                  <div style={styles.cardBody}>
+                    <div style={styles.cardRow}>
+                      <p style={styles.cardTitre}>{a.titre}</p>
+                      <p style={styles.cardPrix}>{Number(a.prix).toLocaleString('fr-FR')}</p>
+                    </div>
+                    <p style={styles.cardLieu}>
+                      {a.quartier || '–'}{a.surface ? ` · ${a.surface}m²` : ''}
+                      {a.meuble ? ' · Meublé' : ''}
+                    </p>
                   </div>
                 </div>
-                <div style={styles.cardBody}>
-                  <div style={styles.cardRow}>
-                    <p style={styles.cardTitre}>{a.titre}</p>
-                    <p style={styles.cardPrix}>{Number(a.prix).toLocaleString('fr-FR')}</p>
-                  </div>
-                  <p style={styles.cardLieu}>
-                    {a.quartier || '–'}{a.surface ? ` · ${a.surface}m²` : ''}
-                    {a.meuble ? ' · Meublé' : ''}
-                  </p>
-                </div>
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div style={styles.pagination}>
+                <button
+                  style={{ ...styles.pageBtn, ...(page === 1 ? styles.pageBtnDisabled : {}) }}
+                  onClick={() => { if (page > 1) { setPage(p => p - 1); window.scrollTo(0, 0) } }}
+                  disabled={page === 1}
+                >← Précédent</button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                  <button
+                    key={n}
+                    style={{ ...styles.pageBtn, ...(page === n ? styles.pageBtnActif : {}) }}
+                    onClick={() => { setPage(n); window.scrollTo(0, 0) }}
+                  >{n}</button>
+                ))}
+                <button
+                  style={{ ...styles.pageBtn, ...(page === totalPages ? styles.pageBtnDisabled : {}) }}
+                  onClick={() => { if (page < totalPages) { setPage(p => p + 1); window.scrollTo(0, 0) } }}
+                  disabled={page === totalPages}
+                >Suivant →</button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
             {/* CARTE */}
@@ -486,6 +532,10 @@ const styles = {
   vueToggle: { display: 'flex', border: '1px solid #E5DDD4', borderRadius: '8px', overflow: 'hidden' },
   vueBtn: { padding: '8px 16px', border: 'none', background: '#fff', cursor: 'pointer', fontSize: '0.88rem', color: '#6B5E4C', fontWeight: '500' },
   vueBtnActif: { backgroundColor: '#E8572A', color: '#fff', fontWeight: '700' },
+  pagination: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '32px 0 8px' },
+  pageBtn: { padding: '8px 14px', border: '1px solid #E5DDD4', borderRadius: '8px', background: '#fff', cursor: 'pointer', fontSize: '0.9rem', color: '#1C1409', fontWeight: '500' },
+  pageBtnActif: { backgroundColor: '#E8572A', color: '#fff', borderColor: '#E8572A', fontWeight: '700' },
+  pageBtnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
   vide: { textAlign: 'center', padding: '80px 0', color: '#6B5E4C' },
   btnOrange: {
     backgroundColor: '#E8572A',

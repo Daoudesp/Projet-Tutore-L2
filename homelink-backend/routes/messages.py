@@ -1,6 +1,8 @@
+import os
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from extensions import db
+from flask_mail import Message as MailMessage
+from extensions import db, mail
 from models.message import Message
 from models.utilisateur import Utilisateur
 from models.annonce import Annonce
@@ -54,6 +56,35 @@ def envoyer_message():
     )
     db.session.add(message)
     db.session.commit()
+
+    # Notification email au destinataire
+    destinataire = db.session.get(Utilisateur, destinataire_id)
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+    if destinataire and os.getenv('MAIL_USERNAME'):
+        try:
+            mail.send(MailMessage(
+                subject='HomeLink — Vous avez un nouveau message',
+                recipients=[destinataire.email],
+                html=f"""
+                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
+                  <h2 style="color:#E8572A">🏠 HomeLink</h2>
+                  <p>Bonjour <strong>{destinataire.prenom}</strong>,</p>
+                  <p><strong>{expediteur.prenom} {expediteur.nom}</strong> vous a envoyé un message
+                  concernant l'annonce <strong>« {annonce.titre} »</strong>.</p>
+                  <blockquote style="border-left:3px solid #E8572A;padding:10px 16px;color:#4A4035;margin:16px 0;background:#FAFAF8;border-radius:0 8px 8px 0">
+                    {data['contenu'].strip()[:200]}{'…' if len(data['contenu']) > 200 else ''}
+                  </blockquote>
+                  <a href="{frontend_url}/messages"
+                     style="display:inline-block;margin:16px 0;padding:12px 24px;
+                            background:#E8572A;color:#fff;text-decoration:none;
+                            border-radius:8px;font-weight:700">
+                    Répondre →
+                  </a>
+                </div>
+                """
+            ))
+        except Exception as e:
+            print(f"[MAIL ERROR message] {e}")
 
     return jsonify({'message': 'Message envoyé avec succès'}), 201
 

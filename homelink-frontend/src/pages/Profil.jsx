@@ -181,6 +181,9 @@ function Profil() {
                           🔓 Re-publier
                         </button>
                       )}
+                      <button style={styles.btnAction} onClick={() => navigate(`/modifier-annonce/${a.id}`)}>
+                        ✏️ Modifier
+                      </button>
                       <button style={styles.btnSupprAnnonce} onClick={() => handleSupprimerAnnonce(a.id)}>
                         🗑 Supprimer
                       </button>
