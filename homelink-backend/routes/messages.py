@@ -86,7 +86,7 @@ def envoyer_message():
                 </div>
                 """
             ))
-        except Exception as e:
+        except BaseException as e:
             print(f"[MAIL ERROR message] {e}")
 
     return jsonify({'message': 'Message envoyé avec succès'}), 201

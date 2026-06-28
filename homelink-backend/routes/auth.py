@@ -66,7 +66,7 @@ def inscription():
                         """
                     )
                     mail.send(msg_email)
-                except Exception as e:
+                except BaseException as e:
                     print(f"[MAIL ERROR resend inscription] {e}")
             return jsonify({'message': 'Un email de confirmation a été renvoyé. Vérifiez votre boîte mail.', 'resend': True}), 200
         return jsonify({'message': 'Cet email est déjà utilisé'}), 400
@@ -114,7 +114,7 @@ def inscription():
                 """
             )
             mail.send(msg_email)
-        except Exception as e:
+        except BaseException as e:
             print(f"[MAIL ERROR inscription] {e}")
 
     return jsonify({'message': 'Compte créé ! Vérifiez votre email pour activer votre compte.'}), 201
@@ -161,7 +161,7 @@ def resend_verification():
                 """
             )
             mail.send(msg_email)
-        except Exception as e:
+        except BaseException as e:
             print(f"[MAIL ERROR resend] {e}")
 
     return jsonify({'message': 'Email de confirmation renvoyé.'}), 200

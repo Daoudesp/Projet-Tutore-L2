@@ -24,3 +24,4 @@ class Config:
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')       # ton.email@gmail.com
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')       # mot de passe d'application Google (16 chars)
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_USERNAME')
+    MAIL_TIMEOUT = 5
