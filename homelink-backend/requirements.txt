@@ -8,3 +8,4 @@ python-dotenv==1.2.2
 cloudinary==1.43.0
 gunicorn==23.0.0
 cryptography==44.0.3
+requests==2.32.3
