@@ -75,6 +75,29 @@ function Admin() {
     } catch { alert('Erreur lors de la suppression') }
   }
 
+  const handleBloquerUtilisateur = async (id) => {
+    try {
+      const res = await api.put(`/admin/utilisateurs/${id}/bloquer`)
+      setUtilisateurs(prev => prev.map(u => u.id === id ? { ...u, actif: res.data.actif } : u))
+    } catch { alert('Erreur lors du blocage') }
+  }
+
+  const handleSupprimerUtilisateur = async (id) => {
+    if (!window.confirm('Supprimer définitivement ce compte ?')) return
+    try {
+      await api.delete(`/admin/utilisateurs/${id}`)
+      setUtilisateurs(prev => prev.filter(u => u.id !== id))
+    } catch { alert('Erreur lors de la suppression') }
+  }
+
+  const handleSupprimerAvis = async (id) => {
+    if (!window.confirm('Supprimer cet avis ?')) return
+    try {
+      await api.delete(`/admin/avis/${id}`)
+      setTousAvis(prev => prev.filter(a => a.id !== id))
+    } catch { alert('Erreur lors de la suppression') }
+  }
+
   return (
     <div style={styles.page} className="admin-layout">
 
@@ -189,14 +212,14 @@ function Admin() {
                   <table style={styles.table}>
                     <thead>
                       <tr style={styles.theadRow}>
-                        {['NOM', 'EMAIL', 'TÉLÉPHONE', 'RÔLE', 'INSCRIT LE'].map(col => (
+                        {['NOM', 'EMAIL', 'TÉLÉPHONE', 'RÔLE', 'STATUT', 'INSCRIT LE', 'ACTIONS'].map(col => (
                           <th key={col} style={styles.th}>{col}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {utilisateurs.map(u => (
-                        <tr key={u.id} style={styles.tr}>
+                        <tr key={u.id} style={{ ...styles.tr, opacity: u.actif === false ? 0.55 : 1 }}>
                           <td style={styles.td}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <div style={styles.avatarTiny}>
@@ -218,7 +241,37 @@ function Admin() {
                               {u.role}
                             </span>
                           </td>
+                          <td style={styles.td}>
+                            {u.role === 'administrateur' ? (
+                              <span style={{ color: '#9B8E83', fontSize: '0.82rem' }}>–</span>
+                            ) : (
+                              <span style={{
+                                ...styles.roleBadge,
+                                backgroundColor: u.actif !== false ? '#DCFCE7' : '#FEE2E2',
+                                color: u.actif !== false ? '#166534' : '#991B1B',
+                              }}>
+                                {u.actif !== false ? 'Actif' : 'Bloqué'}
+                              </span>
+                            )}
+                          </td>
                           <td style={styles.td}><span style={{ color: '#9B8E83', fontSize: '0.85rem' }}>{u.date_inscription}</span></td>
+                          <td style={styles.td}>
+                            {u.role !== 'administrateur' && (
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  style={u.actif !== false ? styles.btnRejeter : styles.btnValider}
+                                  onClick={() => handleBloquerUtilisateur(u.id)}
+                                >
+                                  {u.actif !== false ? 'Bloquer' : 'Débloquer'}
+                                </button>
+                                <button
+                                  style={styles.btnSupprimer}
+                                  onClick={() => handleSupprimerUtilisateur(u.id)}
+                                  title="Supprimer le compte"
+                                >🗑</button>
+                              </div>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -243,7 +296,7 @@ function Admin() {
                   <table style={styles.table}>
                     <thead>
                       <tr style={styles.theadRow}>
-                        {['LOCATAIRE', 'LOGEMENT', 'NOTE', 'COMMENTAIRE', 'DATE'].map(col => (
+                        {['LOCATAIRE', 'LOGEMENT', 'NOTE', 'COMMENTAIRE', 'DATE', 'ACTION'].map(col => (
                           <th key={col} style={styles.th}>{col}</th>
                         ))}
                       </tr>
@@ -273,6 +326,13 @@ function Admin() {
                           </td>
                           <td style={styles.td}>
                             <span style={{ color: '#9B8E83', fontSize: '0.82rem' }}>{a.date_avis}</span>
+                          </td>
+                          <td style={styles.td}>
+                            <button
+                              style={styles.btnSupprimer}
+                              onClick={() => handleSupprimerAvis(a.id)}
+                              title="Supprimer cet avis"
+                            >🗑</button>
                           </td>
                         </tr>
                       ))}

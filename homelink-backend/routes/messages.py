@@ -36,16 +36,16 @@ def envoyer_message():
 
     proprietaire_id = annonce.bien.proprietaire_id
 
-    # Bloquer auto-message
-    if proprietaire_id == expediteur_id:
-        return jsonify({'message': 'Vous ne pouvez pas envoyer un message pour votre propre annonce'}), 400
-
     # destinataire_id : fourni par le client (réponse proprietaire→locataire)
     # ou déduit automatiquement (premier message locataire→proprietaire)
     destinataire_id = data.get('destinataire_id')
     if not destinataire_id:
         # Premier contact : le destinataire est le propriétaire
         destinataire_id = proprietaire_id
+
+    # Bloquer auto-message (vérifier sur le destinataire final)
+    if int(destinataire_id) == expediteur_id:
+        return jsonify({'message': 'Vous ne pouvez pas vous envoyer un message à vous-même'}), 400
 
     # Vérifier que le destinataire existe
     if not db.session.get(Utilisateur, destinataire_id):
@@ -170,6 +170,131 @@ def get_messages():
             })
 
     return jsonify(resultat), 200
+
+
+# Liste des conversations (groupées par annonce + interlocuteur)
+@messages.route('/conversations', methods=['GET'])
+@jwt_required()
+def get_conversations():
+    utilisateur_id = int(get_jwt_identity())
+    utilisateur = db.session.get(Utilisateur, utilisateur_id)
+    if not utilisateur:
+        return jsonify([]), 200
+
+    if utilisateur.role == 'proprietaire':
+        from models.bien_immobilier import BienImmobilier
+        from sqlalchemy import func
+        # Tous les messages reçus par ce proprio, groupés par (annonce, expediteur)
+        msgs = (Message.query
+                .join(Annonce)
+                .join(BienImmobilier)
+                .filter(BienImmobilier.proprietaire_id == utilisateur_id)
+                .order_by(Message.date_envoi.desc())
+                .all())
+
+        vus = set()
+        convs = []
+        for m in msgs:
+            key = (m.annonce_id, m.expediteur_id if m.expediteur_id != utilisateur_id else m.destinataire_id)
+            if key in vus:
+                continue
+            vus.add(key)
+            other_id = m.expediteur_id if m.expediteur_id != utilisateur_id else m.destinataire_id
+            other = db.session.get(Utilisateur, other_id)
+            non_lus = Message.query.filter_by(
+                annonce_id=m.annonce_id,
+                expediteur_id=other_id,
+                destinataire_id=utilisateur_id,
+                lu=False
+            ).count()
+            convs.append({
+                'annonce_id': m.annonce_id,
+                'annonce_titre': m.annonce.titre if m.annonce else '–',
+                'other_user_id': other_id,
+                'other_user_prenom': other.prenom if other else '?',
+                'other_user_nom': other.nom if other else '?',
+                'other_user_telephone': other.telephone or '' if other else '',
+                'last_message': m.contenu[:80],
+                'last_date': m.date_envoi.strftime('%d/%m/%Y %H:%M'),
+                'non_lus': non_lus,
+            })
+        return jsonify(convs), 200
+
+    else:
+        # Locataire : toutes les annonces avec lesquelles il a échangé
+        envoy = Message.query.filter_by(expediteur_id=utilisateur_id).all()
+        recus = Message.query.filter_by(destinataire_id=utilisateur_id).all()
+        tous = envoy + recus
+
+        vus = set()
+        convs = []
+        for m in sorted(tous, key=lambda x: x.date_envoi, reverse=True):
+            other_id = m.destinataire_id if m.expediteur_id == utilisateur_id else m.expediteur_id
+            key = (m.annonce_id, other_id)
+            if key in vus:
+                continue
+            vus.add(key)
+            other = db.session.get(Utilisateur, other_id)
+            non_lus = Message.query.filter_by(
+                annonce_id=m.annonce_id,
+                expediteur_id=other_id,
+                destinataire_id=utilisateur_id,
+                lu=False
+            ).count()
+            convs.append({
+                'annonce_id': m.annonce_id,
+                'annonce_titre': m.annonce.titre if m.annonce else '–',
+                'other_user_id': other_id,
+                'other_user_prenom': other.prenom if other else '?',
+                'other_user_nom': other.nom if other else '?',
+                'other_user_telephone': other.telephone or '' if other else '',
+                'last_message': m.contenu[:80],
+                'last_date': m.date_envoi.strftime('%d/%m/%Y %H:%M'),
+                'non_lus': non_lus,
+            })
+        return jsonify(convs), 200
+
+
+# Fil de discussion d'une conversation
+@messages.route('/thread', methods=['GET'])
+@jwt_required()
+def get_thread():
+    from flask import request as req
+    utilisateur_id = int(get_jwt_identity())
+    annonce_id = req.args.get('annonce_id', type=int)
+    other_id = req.args.get('other_user_id', type=int)
+
+    if not annonce_id or not other_id:
+        return jsonify([]), 200
+
+    fil = Message.query.filter(
+        Message.annonce_id == annonce_id,
+        db.or_(
+            db.and_(Message.expediteur_id == utilisateur_id, Message.destinataire_id == other_id),
+            db.and_(
+                Message.expediteur_id == other_id,
+                db.or_(
+                    Message.destinataire_id == utilisateur_id,
+                    Message.destinataire_id.is_(None)
+                )
+            ),
+        )
+    ).order_by(Message.date_envoi.asc()).all()
+
+    # Marquer les messages reçus comme lus
+    for m in fil:
+        if m.destinataire_id == utilisateur_id and not m.lu:
+            m.lu = True
+    db.session.commit()
+
+    return jsonify([{
+        'id': m.id,
+        'contenu': m.contenu,
+        'expediteur_id': m.expediteur_id,
+        'date_envoi': m.date_envoi.strftime('%d/%m/%Y %H:%M'),
+        'is_mine': m.expediteur_id == utilisateur_id,
+        'lu': m.lu,
+    } for m in fil]), 200
 
 
 # Nombre de messages non lus (pour le badge navbar)

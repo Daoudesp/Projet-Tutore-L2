@@ -13,11 +13,13 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Réponse : si 401, vider la session et rediriger vers /login
+// Réponse : si 401 sur une route protégée, vider la session et rediriger vers /login
+// Ne pas intercepter /connexion (erreur d'identifiants à afficher à l'utilisateur)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || ''
+    if (error.response?.status === 401 && !url.includes('/connexion')) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'

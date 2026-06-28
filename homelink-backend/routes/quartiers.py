@@ -14,6 +14,12 @@ def to_dict(q):
         'description': q.description
     }
 
+# Stats publiques (page d'accueil)
+@quartiers.route('/stats-publiques', methods=['GET'])
+def get_stats_publiques():
+    nb_proprietaires = Utilisateur.query.filter_by(role='proprietaire').count()
+    return jsonify({'proprietaires': nb_proprietaires}), 200
+
 # Récupérer tous les quartiers
 @quartiers.route('/quartiers', methods=['GET'])
 def get_quartiers():

@@ -15,3 +15,4 @@ class Utilisateur(db.Model):
     reset_token_expire = db.Column(db.DateTime, nullable=True)
     email_verifie = db.Column(db.Boolean, default=False, nullable=False)
     email_token = db.Column(db.String(100), nullable=True)
+    actif = db.Column(db.Boolean, default=True, nullable=False)

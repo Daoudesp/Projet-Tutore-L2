@@ -8,8 +8,6 @@ function Profil() {
   const [annonces, setAnnonces] = useState([])
   const [succes, setSucces] = useState(false)
   const [erreur, setErreur] = useState('')
-  const [confirmSuppr, setConfirmSuppr] = useState(false)
-  const [supprErreur, setSupprErreur] = useState('')
   const [modalLouerAnnonce, setModalLouerAnnonce] = useState(null) // { id, locataires: [] }
   const [locataireSelectionne, setLocataireSelectionne] = useState('')
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -80,20 +78,7 @@ function Profil() {
     }
   }
 
-  const handleSupprimerCompte = async () => {
-    setSupprErreur('')
-    try {
-      await api.delete('/profil')
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      navigate('/login')
-    } catch (err) {
-      setSupprErreur(err.response?.data?.message || 'Erreur lors de la suppression')
-      setConfirmSuppr(false)
-    }
-  }
-
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault()
     setErreur('')
     if (!validerTelephone(form.telephone)) {
@@ -217,32 +202,6 @@ function Profil() {
           )}
         </div>
 
-        {/* ZONE DANGER — SUPPRESSION DE COMPTE */}
-        {user.role !== 'administrateur' && (
-          <div style={styles.dangerZone}>
-            <h3 style={{ color: '#991B1B', fontWeight: '700', margin: '0 0 8px', fontSize: '1rem' }}>
-              Zone dangereuse
-            </h3>
-            <p style={{ color: '#6B5E4C', fontSize: '0.88rem', margin: '0 0 16px' }}>
-              La suppression de votre compte est irréversible. Toutes vos données seront effacées définitivement.
-            </p>
-            {supprErreur && <p style={{ color: '#dc2626', fontSize: '0.88rem', marginBottom: '12px' }}>{supprErreur}</p>}
-            {!confirmSuppr ? (
-              <button onClick={() => setConfirmSuppr(true)} style={styles.btnDanger}>
-                Supprimer mon compte
-              </button>
-            ) : (
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button onClick={handleSupprimerCompte} style={styles.btnDangerConfirm}>
-                  Oui, supprimer définitivement
-                </button>
-                <button onClick={() => setConfirmSuppr(false)} style={styles.btnAnnuler}>
-                  Annuler
-                </button>
-              </div>
-            )}
-          </div>
-        )}
 
       </div>
     </div>

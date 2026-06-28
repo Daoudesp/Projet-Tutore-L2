@@ -18,7 +18,7 @@ STATUTS_VALIDES = ('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE')
 @annonces.route('/annonces', methods=['GET'])
 def get_annonces():
     opts = joinedload(Annonce.bien).joinedload(BienImmobilier.quartier)
-    liste = Annonce.query.options(opts).filter_by(statut='PUBLIEE').all()
+    liste = Annonce.query.options(opts).filter_by(statut='PUBLIEE').order_by(Annonce.date_publication.desc()).all()
     resultat = []
     for annonce in liste:
         if not annonce.bien or not annonce.bien.quartier:
@@ -56,6 +56,8 @@ def get_annonce(id):
         'statut': annonce.statut,
         'type_logement': annonce.bien.type_logement,
         'quartier': annonce.bien.quartier.nom,
+        'quartier_commune': annonce.bien.quartier.commune,
+        'quartier_description': annonce.bien.quartier.description,
         'adresse': annonce.bien.adresse,
         'surface': float(annonce.bien.surface) if annonce.bien.surface else None,
         'nombre_pieces': annonce.bien.nombre_pieces,

@@ -201,6 +201,9 @@ def connexion():
     if not utilisateur.email_verifie:
         return jsonify({'message': 'Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte mail.'}), 403
 
+    if not utilisateur.actif:
+        return jsonify({'message': 'Votre compte a été suspendu. Contactez l\'administrateur.'}), 403
+
     token = create_access_token(identity=str(utilisateur.id))
 
     return jsonify({

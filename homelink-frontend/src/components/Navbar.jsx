@@ -54,7 +54,7 @@ function Navbar() {
             {user.role === 'proprietaire' && (
               <>
                 {lienMessages('Messages')}
-                <Link to="/publier" style={styles.btnPrimary}>Publier une annonce</Link>
+                <Link to="/publier" style={styles.link}>Publier une annonce</Link>
               </>
             )}
             {user.role === 'locataire' && (
@@ -74,7 +74,7 @@ function Navbar() {
         ) : (
           <>
             <Link to="/login" style={styles.link}>Connexion</Link>
-            <Link to="/register" style={styles.btnPrimary}>Publier une annonce</Link>
+            <Link to="/register" style={styles.link}>Publier une annonce</Link>
           </>
         )}
       </div>

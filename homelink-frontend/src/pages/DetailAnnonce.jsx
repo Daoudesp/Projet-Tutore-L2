@@ -194,6 +194,25 @@ function DetailAnnonce() {
               {annonce.description || 'Aucune description fournie.'}
             </p>
 
+            {/* INFOS QUARTIER */}
+            {(annonce.quartier_commune || annonce.quartier_description) && (
+              <div style={styles.quartierCard}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#1C1409', marginBottom: '12px' }}>
+                  📍 Le quartier — {annonce.quartier}
+                </h3>
+                {annonce.quartier_commune && (
+                  <p style={{ color: '#6B5E4C', fontSize: '0.9rem', marginBottom: '6px' }}>
+                    <strong>Commune :</strong> {annonce.quartier_commune}
+                  </p>
+                )}
+                {annonce.quartier_description && (
+                  <p style={{ color: '#4A4035', fontSize: '0.9rem', lineHeight: '1.6', margin: 0 }}>
+                    {annonce.quartier_description}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* AVIS */}
             <div style={{ marginTop: '36px', borderTop: '1px solid #E5DDD4', paddingTop: '28px' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1C1409', marginBottom: '4px' }}>
@@ -299,60 +318,58 @@ function DetailAnnonce() {
 
           </div>
 
-          {/* COLONNE DROITE — CONTACT */}
-          <div style={styles.right}>
-            <div style={styles.contactCard}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1C1409', marginBottom: '20px' }}>
-                Contacter le propriétaire
-              </h3>
+          {/* COLONNE DROITE — CONTACT (masquée pour l'admin) */}
+          {userLocal.role !== 'administrateur' && (
+            <div style={styles.right}>
+              <div style={styles.contactCard}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1C1409', marginBottom: '20px' }}>
+                  Contacter le propriétaire
+                </h3>
 
-              {!token ? (
-                <>
-                  <p style={{ color: '#6B5E4C', marginBottom: '16px', fontSize: '0.9rem' }}>
-                    Connectez-vous pour envoyer un message.
+                {!token ? (
+                  <>
+                    <p style={{ color: '#6B5E4C', marginBottom: '16px', fontSize: '0.9rem' }}>
+                      Connectez-vous pour envoyer un message.
+                    </p>
+                    <button style={styles.btnOrange} onClick={() => navigate('/login')}>
+                      Se connecter
+                    </button>
+                  </>
+                ) : userLocal.role === 'proprietaire' ? (
+                  <p style={{ color: '#6B5E4C', fontSize: '0.9rem', padding: '16px 0' }}>
+                    Vous êtes propriétaire. Seuls les locataires peuvent contacter un propriétaire.
                   </p>
-                  <button style={styles.btnOrange} onClick={() => navigate('/login')}>
-                    Se connecter
-                  </button>
-                </>
-              ) : userLocal.role === 'proprietaire' ? (
-                <p style={{ color: '#6B5E4C', fontSize: '0.9rem', padding: '16px 0' }}>
-                  Vous êtes propriétaire. Seuls les locataires peuvent contacter un propriétaire.
-                </p>
-              ) : userLocal.role === 'administrateur' ? (
-                <p style={{ color: '#6B5E4C', fontSize: '0.9rem', padding: '16px 0' }}>
-                  Les administrateurs ne peuvent pas contacter les propriétaires.
-                </p>
-              ) : envoye ? (
-                <div style={styles.successBox}>
-                  ✅ Message envoyé ! Le propriétaire vous répondra bientôt.
-                </div>
-              ) : (
-                <form onSubmit={handleContact}>
-                  <textarea
-                    style={styles.textarea}
-                    placeholder="Bonjour, je suis intéressé(e) par votre annonce…"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={5}
-                    required
-                  />
-                  <button type="submit" style={styles.btnOrange}>
-                    💬 Envoyer le message
-                  </button>
-                </form>
-              )}
+                ) : envoye ? (
+                  <div style={styles.successBox}>
+                    ✅ Message envoyé ! Le propriétaire vous répondra bientôt.
+                  </div>
+                ) : (
+                  <form onSubmit={handleContact}>
+                    <textarea
+                      style={styles.textarea}
+                      placeholder="Bonjour, je suis intéressé(e) par votre annonce…"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      rows={5}
+                      required
+                    />
+                    <button type="submit" style={styles.btnOrange}>
+                      💬 Envoyer le message
+                    </button>
+                  </form>
+                )}
 
-              {token && userLocal.role === 'locataire' && (
-                <button
-                  style={favori ? styles.btnFavoriActif : styles.btnFavori}
-                  onClick={handleFavori}
-                >
-                  {favori ? '❤️ Ajouté aux favoris' : '🤍 Ajouter aux favoris'}
-                </button>
-              )}
+                {token && userLocal.role === 'locataire' && (
+                  <button
+                    style={favori ? styles.btnFavoriActif : styles.btnFavori}
+                    onClick={handleFavori}
+                  >
+                    {favori ? '❤️ Ajouté aux favoris' : '🤍 Ajouter aux favoris'}
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>
@@ -447,6 +464,10 @@ const styles = {
   avisFormBox: {
     backgroundColor: '#fff', border: '1px solid #E5DDD4',
     borderRadius: '12px', padding: '20px',
+  },
+  quartierCard: {
+    marginTop: '28px', backgroundColor: '#F5F0E8',
+    border: '1px solid #E5DDD4', borderRadius: '12px', padding: '20px',
   },
   photoNav: {
     position: 'absolute', bottom: '16px', left: '50%',

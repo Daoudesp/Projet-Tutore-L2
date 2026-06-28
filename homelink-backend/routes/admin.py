@@ -1,9 +1,10 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request as flask_request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models.annonce import Annonce
 from models.utilisateur import Utilisateur
 from models.photo import Photo
+from models.avis import Avis
 from sqlalchemy.orm import joinedload
 from models.bien_immobilier import BienImmobilier
 
@@ -48,6 +49,7 @@ def get_utilisateurs():
         'telephone': u.telephone or '',
         'role': u.role,
         'date_inscription': u.date_inscription.strftime('%Y-%m-%d'),
+        'actif': u.actif,
     } for u in liste]), 200
 
 
@@ -119,3 +121,59 @@ def rejeter_annonce(id):
     annonce.statut = 'SUSPENDUE'
     db.session.commit()
     return jsonify({'message': 'Annonce rejetée'}), 200
+
+
+# Bloquer / débloquer un utilisateur
+@admin.route('/admin/utilisateurs/<int:id>/bloquer', methods=['PUT'])
+@jwt_required()
+def bloquer_utilisateur(id):
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
+        return jsonify({'message': 'Accès refusé'}), 403
+
+    utilisateur = db.session.get(Utilisateur, id)
+    if not utilisateur:
+        return jsonify({'message': 'Utilisateur introuvable'}), 404
+    if utilisateur.role == 'administrateur':
+        return jsonify({'message': 'Impossible de bloquer un administrateur'}), 400
+
+    utilisateur.actif = not utilisateur.actif
+    db.session.commit()
+    statut = 'bloqué' if not utilisateur.actif else 'débloqué'
+    return jsonify({'message': f'Compte {statut}', 'actif': utilisateur.actif}), 200
+
+
+# Supprimer un compte utilisateur
+@admin.route('/admin/utilisateurs/<int:id>', methods=['DELETE'])
+@jwt_required()
+def supprimer_utilisateur(id):
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
+        return jsonify({'message': 'Accès refusé'}), 403
+
+    utilisateur = db.session.get(Utilisateur, id)
+    if not utilisateur:
+        return jsonify({'message': 'Utilisateur introuvable'}), 404
+    if utilisateur.role == 'administrateur':
+        return jsonify({'message': 'Impossible de supprimer un administrateur'}), 400
+
+    db.session.delete(utilisateur)
+    db.session.commit()
+    return jsonify({'message': 'Compte supprimé'}), 200
+
+
+# Supprimer un avis (modération)
+@admin.route('/admin/avis/<int:id>', methods=['DELETE'])
+@jwt_required()
+def supprimer_avis(id):
+    uid = int(get_jwt_identity())
+    if not check_admin(uid):
+        return jsonify({'message': 'Accès refusé'}), 403
+
+    a = db.session.get(Avis, id)
+    if not a:
+        return jsonify({'message': 'Avis introuvable'}), 404
+
+    db.session.delete(a)
+    db.session.commit()
+    return jsonify({'message': 'Avis supprimé'}), 200

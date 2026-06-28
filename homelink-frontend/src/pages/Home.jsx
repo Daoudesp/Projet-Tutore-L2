@@ -11,15 +11,17 @@ function Home() {
   const [type, setType] = useState('')
   const [budget, setBudget] = useState('')
   const [annonces, setAnnonces] = useState([])
-  const [stats, setStats] = useState({ logements: 0, quartiers: 0 })
+  const [stats, setStats] = useState({ logements: 0, quartiers: 0, proprietaires: 0 })
 
   useEffect(() => {
     api.get('/annonces').then(res => {
       const data = res.data
       setAnnonces(data.slice(0, 4))
-      // Stats réelles depuis les annonces publiées
       const quartiersUniques = new Set(data.map(a => a.quartier).filter(Boolean))
-      setStats({ logements: data.length, quartiers: quartiersUniques.size })
+      setStats(prev => ({ ...prev, logements: data.length, quartiers: quartiersUniques.size }))
+    }).catch(() => {})
+    api.get('/stats-publiques').then(res => {
+      setStats(prev => ({ ...prev, proprietaires: res.data.proprietaires }))
     }).catch(() => {})
   }, [])
 
@@ -88,8 +90,8 @@ function Home() {
               <span style={styles.statLib}>quartier{stats.quartiers > 1 ? 's' : ''}</span>
             </div>
             <div style={styles.stat}>
-              <strong style={styles.statNum}>100%</strong>
-              <span style={styles.statLib}>vérifiées</span>
+              <strong style={styles.statNum}>{stats.proprietaires}</strong>
+              <span style={styles.statLib}>propriétaire{stats.proprietaires > 1 ? 's' : ''}</span>
             </div>
           </div>
         </div>
