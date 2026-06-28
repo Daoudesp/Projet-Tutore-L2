@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS `utilisateurs` (
   `telephone` VARCHAR(20),
   `role` ENUM('locataire', 'proprietaire', 'administrateur') NOT NULL,
   `date_inscription` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `reset_token` VARCHAR(100),
+  `reset_token` VARCHAR(100) DEFAULT NULL,
   `reset_token_expire` TIMESTAMP NULL,
   `email_verifie` TINYINT(1) NOT NULL DEFAULT 0,
-  `email_token` VARCHAR(100),
+  `email_token` VARCHAR(100) DEFAULT NULL,
   `actif` TINYINT(1) NOT NULL DEFAULT 1
 );
 
@@ -32,16 +32,17 @@ CREATE TABLE IF NOT EXISTS `quartiers` (
 CREATE TABLE IF NOT EXISTS `biens_immobiliers` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `proprietaire_id` INT NOT NULL,
-  `quartier_id` INT,
+  `quartier_id` INT NOT NULL,
   `adresse` VARCHAR(255),
+  `ville` VARCHAR(100) DEFAULT 'Dakar',
   `surface` DECIMAL(8,2),
   `nombre_pieces` INT,
   `nombre_salles_de_bain` INT,
   `etage` INT DEFAULT 0,
   `meuble` TINYINT(1) DEFAULT 0,
-  `type_logement` VARCHAR(50),
+  `type_logement` ENUM('CHAMBRE', 'STUDIO', 'APPARTEMENT', 'VILLA') NOT NULL,
   FOREIGN KEY (`proprietaire_id`) REFERENCES `utilisateurs`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`quartier_id`) REFERENCES `quartiers`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`quartier_id`) REFERENCES `quartiers`(`id`)
 );
 
 -- Annonces
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `annonces` (
   `date_publication` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `date_expiration` TIMESTAMP NULL,
   `statut` ENUM('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE') DEFAULT 'EN_ATTENTE',
-  `locataire_loue_id` INT,
+  `locataire_loue_id` INT DEFAULT NULL,
   FOREIGN KEY (`bien_id`) REFERENCES `biens_immobiliers`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`locataire_loue_id`) REFERENCES `utilisateurs`(`id`) ON DELETE SET NULL
 );
@@ -63,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `annonces` (
 CREATE TABLE IF NOT EXISTS `messages` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `expediteur_id` INT NOT NULL,
-  `destinataire_id` INT,
+  `destinataire_id` INT DEFAULT NULL,
   `annonce_id` INT NOT NULL,
   `contenu` TEXT NOT NULL,
   `date_envoi` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -81,6 +82,7 @@ CREATE TABLE IF NOT EXISTS `avis` (
   `note` INT NOT NULL,
   `commentaire` TEXT,
   `date_avis` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `unique_avis` (`locataire_id`, `bien_id`),
   FOREIGN KEY (`locataire_id`) REFERENCES `utilisateurs`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`bien_id`) REFERENCES `biens_immobiliers`(`id`) ON DELETE CASCADE
 );
@@ -106,3 +108,21 @@ CREATE TABLE IF NOT EXISTS `favoris` (
 );
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ============================================================
+-- DONNÉES INITIALES : quartiers de Dakar
+-- ============================================================
+INSERT IGNORE INTO `quartiers` (nom, commune, description) VALUES
+('Plateau',     'Dakar Plateau', 'Centre des affaires de Dakar'),
+('Point E',     'Dakar',         'Quartier résidentiel prisé, proche de l''UCAD'),
+('Mermoz',      'Dakar',         'Quartier résidentiel calme et verdoyant'),
+('Médina',      'Dakar',         'Quartier populaire et central'),
+('Ouakam',      'Dakar',         'Quartier côtier avec vue sur l''Atlantique'),
+('Sacré-Cœur',  'Dakar',         'Quartier résidentiel moderne'),
+('Yoff',        'Dakar',         'Quartier côtier au nord de Dakar'),
+('Almadies',    'Dakar',         'Zone résidentielle haut standing'),
+('Ngor',        'Dakar',         'Village côtier pittoresque'),
+('Fann',        'Dakar',         'Quartier universitaire et diplomatique'),
+('HLM',         'Dakar',         'Quartier populaire bien desservi'),
+('Liberté',     'Dakar',         'Quartier résidentiel dynamique'),
+('Grand Dakar', 'Dakar',         'Quartier populaire étendu');

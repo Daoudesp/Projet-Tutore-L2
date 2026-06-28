@@ -1,0 +1,6 @@
+Gunicorn c'est le serveur web pour faire tourner Flask en production. En développement tu utilises flask run (serveur intégré, pas adapté à la production). Sur Render, il faut gunicorn.
+Les variables d'environnement c'est l'équivalent de ton fichier .env local, mais sur Render. Au lieu de mettre les secrets dans le code, tu les configures dans l'interface.
+Pour les ajouter : clique Add Environment Variable, tu as deux champs — Key (la clé) et Value (la valeur). Tu saisis une ligne et tu recommences pour chaque variable.
+KeyValueDB_HOSTsql7.freesqldatabase.comDB_USERsql7831769
+Le backend est en ligne 🎉
+URL du backend : https://projet-tutore-l2.onrender.com
