@@ -93,7 +93,7 @@ function PublierAnnonce() {
   if (succes) {
     return (
       <div style={styles.page}>
-        <div style={styles.card}>
+        <div style={styles.card} className="auth-card">
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✅</div>
           <h2 style={{ color: '#1C1409', marginBottom: '12px' }}>Annonce soumise !</h2>
           <p style={{ color: '#6B5E4C', marginBottom: '28px' }}>

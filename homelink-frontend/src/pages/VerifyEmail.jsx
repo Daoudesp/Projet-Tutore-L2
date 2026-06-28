@@ -27,7 +27,7 @@ function VerifyEmail() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.card}>
+      <div style={styles.card} className="auth-card">
         {statut === 'chargement' && (
           <>
             <div style={{ fontSize: '2rem', textAlign: 'center', marginBottom: '16px' }}>⏳</div>

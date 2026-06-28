@@ -51,73 +51,56 @@ input, select, textarea {
   display: none !important;
 }
 
-/* ── Mobile (≤ 768px) ────────────────────────── */
+/* ══════════════════════════════════════════════════
+   MOBILE (≤ 768px)
+══════════════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* Navbar */
-  nav[style] {
-    padding: 14px 20px !important;
-  }
-  .nav-desktop {
-    display: none !important;
-  }
-  .nav-hamburger {
-    display: flex !important;
-  }
+  /* ── Navbar ── */
+  nav[style] { padding: 14px 20px !important; }
+  .nav-desktop  { display: none !important; }
+  .nav-hamburger { display: flex !important; }
 
   /* ── Home : hero ── */
   .home-hero {
     flex-direction: column !important;
-    padding: 28px 20px 20px !important;
+    padding: 28px 16px 20px !important;
+    gap: 20px !important;
+  }
+  .home-hero-left h1 { font-size: 1.75rem !important; }
+  .home-hero-right   { display: none !important; }
+
+  /* ── Home : stats ── */
+  .home-hero-left > div[style*="gap: 40px"],
+  .home-hero-left > div[style*="gap:40px"] {
     gap: 24px !important;
   }
-  .home-hero-left h1 {
-    font-size: 1.8rem !important;
-  }
-  .home-hero-right {
-    display: none !important; /* grille de photos cachée sur mobile */
-  }
 
-  /* ── Home : section annonces ── */
-  .home-section {
-    padding: 0 16px 40px !important;
-  }
+  /* ── Home : section "en vedette" ── */
+  .home-section { padding: 0 16px 40px !important; }
   .home-cards-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 14px !important;
+    gap: 12px !important;
   }
 
   /* ── Annonces : barre de filtres ── */
-  .annonces-filtres {
-    padding: 12px 16px !important;
-  }
+  .annonces-filtres { padding: 12px 16px !important; }
   .annonces-search-form {
     flex-direction: column !important;
     gap: 0 !important;
-    border-radius: 10px !important;
     overflow: visible !important;
   }
-  .annonces-search-form > div[style] {
-    padding: 10px 14px !important;
-    border-bottom: 1px solid #E5DDD4 !important;
-  }
-  .annonces-search-form > div[style]:last-of-type {
-    border-bottom: none !important;
-  }
-  /* masquer les séparateurs verticaux sur mobile */
-  .annonces-search-form > [style*="width: 1px"],
-  .annonces-search-form > [style*="width:1px"] {
-    display: none !important;
-  }
+  /* champs du formulaire */
+  .annonces-search-form > div { border-bottom: 1px solid #E5DDD4 !important; }
+  /* séparateurs verticaux → cachés */
+  .annonces-search-form > div[style*="width: 1px"],
+  .annonces-search-form > div[style*="height: 36px"] { display: none !important; }
   .annonces-search-form button[type="submit"] {
     width: 100% !important;
-    border-radius: 0 0 10px 10px !important;
+    border-radius: 0 0 12px 12px !important;
     height: 48px !important;
   }
-  .annonces-search-form button[type="button"] {
-    width: 100% !important;
-    height: 44px !important;
-  }
+  .annonces-search-form button[type="button"] { width: 100% !important; height: 44px !important; }
 
   /* ── Annonces : header résultats ── */
   .annonces-header {
@@ -127,28 +110,79 @@ input, select, textarea {
     gap: 12px !important;
   }
 
-  /* ── Annonces : conteneur + grille ── */
-  .annonces-container {
-    padding: 0 16px 40px !important;
-  }
+  /* ── Annonces : grille ── */
+  .annonces-container { padding: 0 16px 40px !important; }
   .annonces-grid {
     grid-template-columns: 1fr !important;
     gap: 14px !important;
   }
 
   /* ── Détail annonce ── */
-  .detail-container {
-    padding: 20px 16px 40px !important;
-  }
+  .detail-container { padding: 20px 16px 40px !important; }
   .detail-layout {
     flex-direction: column !important;
     gap: 24px !important;
   }
 
-  /* Admin sidebar → row compact */
-  .admin-layout {
+  /* ── Messages : navigation sidebar / thread ── */
+  .messages-page {
     flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+    min-height: calc(100vh - 56px) !important;
   }
+  .messages-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid #E5DDD4 !important;
+    flex-shrink: 0 !important;
+    max-height: none !important;
+  }
+  .messages-main { min-height: calc(100vh - 56px) !important; }
+  /* Quand un thread est ouvert → cacher la sidebar */
+  .messages-vue-thread .messages-sidebar { display: none !important; }
+  /* Quand pas de thread → cacher le main */
+  .messages-page:not(.messages-vue-thread) .messages-main { display: none !important; }
+  /* Bouton retour — visible uniquement sur mobile */
+  .messages-back-btn {
+    display: block !important;
+    width: 100% !important;
+    padding: 12px 16px !important;
+    background: #F5F0E8 !important;
+    border: none !important;
+    border-bottom: 1px solid #E5DDD4 !important;
+    color: #E8572A !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    text-align: left !important;
+    font-family: inherit !important;
+  }
+  /* thread body : réduire padding bulles */
+  .messages-main > div[style*="padding: 24px 28px"],
+  .messages-main > div[style*="padding:24px 28px"] {
+    padding: 16px !important;
+  }
+
+  /* ── Favoris ── */
+  .favoris-page { padding: 24px 16px !important; }
+  .favoris-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  /* ── Profil ── */
+  .profil-page { padding: 24px 16px !important; }
+  .profil-row { flex-direction: column !important; }
+
+  /* ── Cards auth (Login, Register, ForgotPwd, etc.) ── */
+  .auth-card {
+    padding: 28px 20px !important;
+    border-radius: 12px !important;
+  }
+
+  /* ── Admin ── */
+  .admin-layout { flex-direction: column !important; }
   .admin-sidebar {
     width: 100% !important;
     min-height: auto !important;
@@ -161,50 +195,41 @@ input, select, textarea {
     gap: 6px !important;
     padding: 0 !important;
   }
-  .admin-content {
-    padding: 16px !important;
-  }
+  .admin-content { padding: 16px !important; }
 
-  /* Tableaux → scroll horizontal */
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
+  /* ── Tableaux → scroll horizontal ── */
+  table { display: block; overflow-x: auto; white-space: nowrap; }
 }
 
-/* ── Tablette (769px – 1024px) → 2 colonnes ──── */
+/* ══════════════════════════════════════════════════
+   TABLETTE (769px – 1024px)
+══════════════════════════════════════════════════ */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .annonces-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .home-cards-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-  .home-hero {
-    padding: 40px 32px !important;
-    gap: 32px !important;
-  }
-  .home-section {
-    padding: 0 32px 48px !important;
-  }
+  .home-hero    { padding: 40px 32px !important; gap: 32px !important; }
+  .home-section { padding: 0 32px 48px !important; }
+  .home-cards-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  .annonces-grid    { grid-template-columns: repeat(2, 1fr) !important; }
   .annonces-container,
-  .annonces-header,
-  .detail-container {
-    padding-left: 32px !important;
-    padding-right: 32px !important;
-  }
+  .annonces-header  { padding-left: 32px !important; padding-right: 32px !important; }
+  .detail-container { padding-left: 32px !important; padding-right: 32px !important; }
+
+  .favoris-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
-/* ── Très petit (≤ 480px) ─────────────────────── */
+/* ══════════════════════════════════════════════════
+   TRÈS PETIT (≤ 480px)
+══════════════════════════════════════════════════ */
 @media (max-width: 480px) {
-  body {
-    font-size: 15px;
-  }
-  .home-cards-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .home-hero-left h1 {
-    font-size: 1.6rem !important;
-  }
+  body { font-size: 15px; }
+  .home-hero-left h1 { font-size: 1.5rem !important; }
+  .home-cards-grid  { grid-template-columns: 1fr !important; }
+  .favoris-grid     { grid-template-columns: 1fr !important; }
+}
+
+/* ══════════════════════════════════════════════════
+   DESKTOP — bouton retour messages caché
+══════════════════════════════════════════════════ */
+@media (min-width: 769px) {
+  .messages-back-btn { display: none !important; }
 }

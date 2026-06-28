@@ -57,7 +57,7 @@ function ForgotPassword() {
   if (envoye) {
     return (
       <div style={styles.page}>
-        <div style={styles.card}>
+        <div style={styles.card} className="auth-card">
           <div style={{ fontSize: '2.5rem', marginBottom: '16px', textAlign: 'center' }}>📧</div>
           <h1 style={styles.titre}>Email envoyé !</h1>
           <p style={{ color: '#6B5E4C', marginBottom: '8px', fontSize: '0.95rem', lineHeight: '1.6', textAlign: 'center' }}>

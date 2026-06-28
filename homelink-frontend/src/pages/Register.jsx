@@ -88,7 +88,7 @@ function Register() {
   if (inscrit) {
     return (
       <div style={styles.page}>
-        <div style={styles.card}>
+        <div style={styles.card} className="auth-card">
           <div style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '16px' }}>📧</div>
           <h1 style={{ ...styles.titre, textAlign: 'center' }}>Vérifiez votre email !</h1>
           <p style={{ color: '#6B5E4C', textAlign: 'center', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '8px' }}>

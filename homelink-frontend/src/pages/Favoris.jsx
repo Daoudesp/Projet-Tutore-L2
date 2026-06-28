@@ -31,7 +31,7 @@ function Favoris() {
   }
 
   return (
-    <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh', padding: '48px 24px' }}>
+    <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh', padding: '48px 24px' }} className="favoris-page">
       <div style={styles.container}>
 
         <div style={styles.header}>
@@ -54,7 +54,7 @@ function Favoris() {
             </button>
           </div>
         ) : (
-          <div style={styles.grid}>
+          <div style={styles.grid} className="favoris-grid">
             {favoris.map(f => (
               <div key={f.id} style={styles.card}>
                 <div

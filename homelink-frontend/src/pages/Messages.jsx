@@ -80,10 +80,10 @@ function Messages() {
   if (chargement) return <div style={{ padding: '80px', textAlign: 'center', color: '#6B5E4C' }}>Chargement…</div>
 
   return (
-    <div style={styles.page}>
+    <div style={styles.page} className={`messages-page${convActive ? ' messages-vue-thread' : ''}`}>
 
       {/* PANNEAU GAUCHE — liste conversations */}
-      <aside style={styles.sidebar}>
+      <aside style={styles.sidebar} className="messages-sidebar">
         <div style={styles.sidebarHeader}>
           <h2 style={styles.sidebarTitre}>
             Conversations
@@ -136,7 +136,7 @@ function Messages() {
       </aside>
 
       {/* PANNEAU DROIT — fil de discussion */}
-      <main style={styles.main}>
+      <main style={styles.main} className="messages-main">
         {!convActive ? (
           <div style={styles.vide}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>💬</div>
@@ -144,6 +144,11 @@ function Messages() {
           </div>
         ) : (
           <>
+            {/* Bouton retour (mobile) */}
+            <button className="messages-back-btn" onClick={() => setConvActive(null)}>
+              ← Conversations
+            </button>
+
             {/* Header du thread */}
             <div style={styles.threadHeader}>
               <div style={styles.avatarConv}>

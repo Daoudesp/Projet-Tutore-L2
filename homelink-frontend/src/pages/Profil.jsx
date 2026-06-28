@@ -97,7 +97,7 @@ const handleSubmit = async (e) => {
 
   return (
     <>
-    <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh', padding: '48px 24px' }}>
+    <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh', padding: '48px 24px' }} className="profil-page">
       <div style={styles.container}>
 
         {/* EN-TÊTE PROFIL */}
@@ -127,7 +127,7 @@ const handleSubmit = async (e) => {
             {erreur && <div style={styles.erreurBox}>{erreur}</div>}
 
             <form onSubmit={handleSubmit}>
-              <div style={styles.row}>
+              <div style={styles.row} className="profil-row">
                 <div style={styles.group}>
                   <label style={styles.label}>Prénom</label>
                   <input style={styles.input} name="prenom" value={form.prenom} onChange={handleChange} required />

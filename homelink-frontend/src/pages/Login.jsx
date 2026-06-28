@@ -26,7 +26,7 @@ function Login() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.card}>
+      <div style={styles.card} className="auth-card">
         <h1 style={styles.titre}>Connexion</h1>
         <p style={styles.sousTitre}>Accédez à votre compte HomeLink</p>
 

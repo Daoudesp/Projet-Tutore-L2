@@ -41,7 +41,7 @@ function ResetPassword() {
   if (succes) {
     return (
       <div style={styles.page}>
-        <div style={styles.card}>
+        <div style={styles.card} className="auth-card">
           <div style={{ fontSize: '2.5rem', marginBottom: '12px', textAlign: 'center' }}>✅</div>
           <h1 style={styles.titre}>Mot de passe modifié</h1>
           <p style={{ color: '#6B5E4C', textAlign: 'center', fontSize: '0.95rem' }}>
