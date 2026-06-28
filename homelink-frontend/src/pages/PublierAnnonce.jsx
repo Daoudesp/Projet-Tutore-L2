@@ -304,13 +304,29 @@ function PublierAnnonce() {
                 🔍 Votre annonce sera <strong>vérifiée par un administrateur</strong> avant sa mise en ligne.
               </div>
 
-              <button
-                type="button"
-                style={{ ...styles.btnOrange, opacity: photos.length === 0 ? 0.5 : 1, cursor: photos.length === 0 ? 'not-allowed' : 'pointer' }}
-                onClick={() => { if (photos.length === 0) return; setSucces(true) }}
-              >
-                {uploadEnCours ? 'Upload en cours…' : 'Terminer'}
-              </button>
+              <div style={styles.row}>
+                {photos.length === 0 && (
+                  <button
+                    type="button"
+                    style={styles.btnGris}
+                    onClick={async () => {
+                      if (annonceId) {
+                        try { await api.delete(`/annonces/${annonceId}`) } catch {}
+                      }
+                      navigate('/')
+                    }}
+                  >
+                    Annuler
+                  </button>
+                )}
+                <button
+                  type="button"
+                  style={{ ...styles.btnOrange, opacity: photos.length === 0 ? 0.5 : 1, cursor: photos.length === 0 ? 'not-allowed' : 'pointer' }}
+                  onClick={() => { if (photos.length === 0) return; setSucces(true) }}
+                >
+                  {uploadEnCours ? 'Upload en cours…' : 'Terminer'}
+                </button>
+              </div>
             </div>
           )}
         </form>
