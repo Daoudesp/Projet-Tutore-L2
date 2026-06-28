@@ -126,8 +126,8 @@ function DetailAnnonce() {
         <div style={styles.imgHero} />
       )}
 
-      <div style={styles.container}>
-        <div style={styles.layout}>
+      <div style={styles.container} className="detail-container">
+        <div style={styles.layout} className="detail-layout">
 
           {/* COLONNE GAUCHE */}
           <div style={styles.left}>

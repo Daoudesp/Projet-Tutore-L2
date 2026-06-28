@@ -65,22 +65,84 @@ input, select, textarea {
     display: flex !important;
   }
 
-  /* Grille annonces → 1 colonne */
-  .annonces-grid {
-    grid-template-columns: 1fr !important;
-    padding: 16px !important;
-    gap: 16px !important;
+  /* ── Home : hero ── */
+  .home-hero {
+    flex-direction: column !important;
+    padding: 28px 20px 20px !important;
+    gap: 24px !important;
+  }
+  .home-hero-left h1 {
+    font-size: 1.8rem !important;
+  }
+  .home-hero-right {
+    display: none !important; /* grille de photos cachée sur mobile */
   }
 
-  /* Barre de filtres annonces → colonne */
-  .annonces-filtres {
-    flex-direction: column !important;
-    padding: 16px !important;
+  /* ── Home : section annonces ── */
+  .home-section {
+    padding: 0 16px 40px !important;
   }
-  .annonces-filtres select,
-  .annonces-filtres input,
-  .annonces-filtres button {
+  .home-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  /* ── Annonces : barre de filtres ── */
+  .annonces-filtres {
+    padding: 12px 16px !important;
+  }
+  .annonces-search-form {
+    flex-direction: column !important;
+    gap: 0 !important;
+    border-radius: 10px !important;
+    overflow: visible !important;
+  }
+  .annonces-search-form > div[style] {
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #E5DDD4 !important;
+  }
+  .annonces-search-form > div[style]:last-of-type {
+    border-bottom: none !important;
+  }
+  /* masquer les séparateurs verticaux sur mobile */
+  .annonces-search-form > [style*="width: 1px"],
+  .annonces-search-form > [style*="width:1px"] {
+    display: none !important;
+  }
+  .annonces-search-form button[type="submit"] {
     width: 100% !important;
+    border-radius: 0 0 10px 10px !important;
+    height: 48px !important;
+  }
+  .annonces-search-form button[type="button"] {
+    width: 100% !important;
+    height: 44px !important;
+  }
+
+  /* ── Annonces : header résultats ── */
+  .annonces-header {
+    padding: 20px 16px 12px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  /* ── Annonces : conteneur + grille ── */
+  .annonces-container {
+    padding: 0 16px 40px !important;
+  }
+  .annonces-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* ── Détail annonce ── */
+  .detail-container {
+    padding: 20px 16px 40px !important;
+  }
+  .detail-layout {
+    flex-direction: column !important;
+    gap: 24px !important;
   }
 
   /* Admin sidebar → row compact */
@@ -111,10 +173,26 @@ input, select, textarea {
   }
 }
 
-/* ── Tablette (769px – 900px) → 2 colonnes ──── */
-@media (min-width: 769px) and (max-width: 900px) {
+/* ── Tablette (769px – 1024px) → 2 colonnes ──── */
+@media (min-width: 769px) and (max-width: 1024px) {
   .annonces-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .home-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .home-hero {
+    padding: 40px 32px !important;
+    gap: 32px !important;
+  }
+  .home-section {
+    padding: 0 32px 48px !important;
+  }
+  .annonces-container,
+  .annonces-header,
+  .detail-container {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
   }
 }
 
@@ -122,5 +200,11 @@ input, select, textarea {
 @media (max-width: 480px) {
   body {
     font-size: 15px;
+  }
+  .home-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .home-hero-left h1 {
+    font-size: 1.6rem !important;
   }
 }

@@ -38,8 +38,8 @@ function Home() {
     <div style={{ backgroundColor: '#FAFAF8', minHeight: '100vh' }}>
 
       {/* HERO */}
-      <section style={styles.hero}>
-        <div style={styles.heroLeft}>
+      <section style={styles.hero} className="home-hero">
+        <div style={styles.heroLeft} className="home-hero-left">
           <span style={styles.tag}>Dalal ak jàmm · Bienvenue à Dakar</span>
           <h1 style={styles.heroTitre}>
             Trouvez votre logement à Dakar,{' '}
@@ -97,7 +97,7 @@ function Home() {
         </div>
 
         {/* HERO GRID — photos des 4 premières annonces */}
-        <div style={styles.heroRight}>
+        <div style={styles.heroRight} className="home-hero-right">
           <div style={styles.heroGrid}>
             {[0, 1, 2, 3].map(i => {
               const a = annonces[i]
@@ -118,12 +118,12 @@ function Home() {
       </section>
 
       {/* ANNONCES EN VEDETTE */}
-      <section style={styles.section}>
+      <section style={styles.section} className="home-section">
         <div style={styles.sectionHeader}>
           <h2 style={styles.sectionTitre}>Annonces en vedette</h2>
           <Link to="/annonces" style={styles.voirTout}>Voir toutes les annonces →</Link>
         </div>
-        <div style={styles.cardsGrid}>
+        <div style={styles.cardsGrid} className="home-cards-grid">
           {annonces.length === 0
             ? [1, 2, 3, 4].map(i => (
                 <div key={i} style={styles.card}>

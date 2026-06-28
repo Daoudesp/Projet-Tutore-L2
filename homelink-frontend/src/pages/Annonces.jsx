@@ -136,7 +136,7 @@ function Annonces() {
 
       {/* BARRE DE RECHERCHE */}
       <div style={styles.searchBar} className="annonces-filtres">
-        <form style={styles.searchForm} onSubmit={handleRecherche}>
+        <form style={styles.searchForm} className="annonces-search-form" onSubmit={handleRecherche}>
           <div style={styles.searchField}>
             <label style={styles.searchLabel}>QUARTIER</label>
             <select style={styles.searchInput} value={formQuartier} onChange={(e) => setFormQuartier(e.target.value)}>
@@ -181,7 +181,7 @@ function Annonces() {
         </form>
       </div>
 
-      <div style={styles.header}>
+      <div style={styles.header} className="annonces-header">
         <div style={styles.headerLeft}>
           <h1 style={styles.titre}>
             {chargement
@@ -219,7 +219,7 @@ function Annonces() {
         </div>
       </div>
 
-      <div style={vue === 'carte' ? styles.containerCarte : styles.container}>
+      <div style={vue === 'carte' ? styles.containerCarte : styles.container} className="annonces-container">
         {chargement ? (
           <p style={{ color: '#6B5E4C', padding: '32px 48px' }}>Chargement des annonces…</p>
         ) : annonces.length === 0 ? (
