@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: homelink-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: DB_HOST
+        value: sql7.freesqldatabase.com
+      - key: DB_USER
+        value: sql7831769
+      - key: DB_NAME
+        value: sql7831769
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dpmosrhj0
+      - key: CLOUDINARY_API_KEY
+        value: "492328812668876"
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
