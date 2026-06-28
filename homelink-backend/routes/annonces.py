@@ -141,6 +141,11 @@ def changer_statut(id):
         # Admin peut tout changer
         if nouveau_statut not in STATUTS_VALIDES:
             return jsonify({'message': 'Statut invalide'}), 400
+        # Bloquer la publication si aucune photo
+        if nouveau_statut == 'PUBLIEE':
+            nb_photos = Photo.query.filter_by(annonce_id=annonce.id).count()
+            if nb_photos == 0:
+                return jsonify({'message': 'Impossible de publier une annonce sans photo'}), 400
     elif utilisateur.role == 'proprietaire':
         # Propriétaire peut seulement : PUBLIEE → LOUEE ou LOUEE → PUBLIEE
         if annonce.bien.proprietaire_id != utilisateur_id:
