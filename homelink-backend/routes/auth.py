@@ -45,7 +45,7 @@ def inscription():
             db.session.commit()
             mail_configure = os.getenv('MAIL_USERNAME')
             if mail_configure:
-                frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+                frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173').strip()
                 lien = f"{frontend_url}/verify-email?token={existant.email_token}"
                 msg_email = MailMessage(
                     subject='HomeLink — Confirmez votre adresse email',
@@ -87,7 +87,7 @@ def inscription():
     # Envoi email de confirmation
     mail_configure = os.getenv('MAIL_USERNAME')
     if mail_configure:
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173').strip()
         lien = f"{frontend_url}/verify-email?token={email_token}"
         msg_email = MailMessage(
             subject='HomeLink — Confirmez votre adresse email',
@@ -132,7 +132,7 @@ def resend_verification():
 
     mail_configure = os.getenv('MAIL_USERNAME')
     if mail_configure:
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173').strip()
         lien = f"{frontend_url}/verify-email?token={utilisateur.email_token}"
         msg_email = MailMessage(
             subject='HomeLink — Confirmez votre adresse email',
@@ -235,7 +235,7 @@ def forgot_password():
     utilisateur.reset_token_expire = datetime.utcnow() + timedelta(minutes=30)
     db.session.commit()
 
-    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173').strip()
     lien = f"{frontend_url}/reset-password?token={token}"
 
     # Envoi de l'email
