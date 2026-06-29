@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Générer les icônes HomeLink</title></head>
+<body style="font-family:sans-serif;padding:32px;background:#FAFAF8">
+<h2 style="color:#E8572A">🏠 Génération des icônes HomeLink</h2>
+<p>Clique sur chaque bouton pour télécharger l'icône.</p>
+<div id="btns" style="display:flex;gap:16px;margin-top:24px;flex-wrap:wrap"></div>
+<div id="preview" style="display:flex;gap:24px;margin-top:24px;flex-wrap:wrap"></div>
+
+<script>
+const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="32" cy="32" r="32" fill="#E8572A"/>
+  <polygon points="32,11 9,31 55,31" fill="#ffffff"/>
+  <rect x="15" y="31" width="34" height="22" rx="1" fill="#ffffff"/>
+  <rect x="25" y="39" width="14" height="14" rx="2" fill="#E8572A"/>
+  <rect x="17" y="34" width="9" height="8" rx="1" fill="#FDE8DF"/>
+  <rect x="38" y="34" width="9" height="8" rx="1" fill="#FDE8DF"/>
+</svg>`
+
+const SIZES = [
+  { size: 72,  name: 'icon-72.png' },
+  { size: 96,  name: 'icon-96.png' },
+  { size: 128, name: 'icon-128.png' },
+  { size: 144, name: 'icon-144.png' },
+  { size: 152, name: 'icon-152.png' },
+  { size: 192, name: 'icon-192.png' },
+  { size: 384, name: 'icon-384.png' },
+  { size: 512, name: 'icon-512.png' },
+  { size: 180, name: 'apple-touch-icon.png' },
+]
+
+function generateIcon(size, name) {
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')
+
+  const blob = new Blob([SVG], { type: 'image/svg+xml' })
+  const url = URL.createObjectURL(blob)
+  const img = new Image()
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, size, size)
+    URL.revokeObjectURL(url)
+
+    canvas.toBlob(blob => {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = name
+      a.click()
+    }, 'image/png')
+  }
+  img.src = url
+}
+
+const btns = document.getElementById('btns')
+const preview = document.getElementById('preview')
+
+SIZES.forEach(({ size, name }) => {
+  // Aperçu
+  const canvas = document.createElement('canvas')
+  canvas.width = size > 128 ? 128 : size
+  canvas.height = size > 128 ? 128 : size
+  canvas.title = name
+  canvas.style.cssText = 'border:1px solid #E5DDD4;border-radius:12px'
+  const ctx = canvas.getContext('2d')
+  const blob = new Blob([SVG], { type: 'image/svg+xml' })
+  const url = URL.createObjectURL(blob)
+  const img = new Image()
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    URL.revokeObjectURL(url)
+  }
+  img.src = url
+  const label = document.createElement('div')
+  label.style.cssText = 'text-align:center;font-size:0.75rem;color:#6B5E4C;margin-top:6px'
+  label.textContent = `${size}×${size}`
+  const wrap = document.createElement('div')
+  wrap.appendChild(canvas)
+  wrap.appendChild(label)
+  preview.appendChild(wrap)
+
+  // Bouton
+  const btn = document.createElement('button')
+  btn.textContent = `⬇ ${name}`
+  btn.style.cssText = 'background:#E8572A;color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:0.9rem'
+  btn.onclick = () => generateIcon(size, name)
+  btns.appendChild(btn)
+})
+
+// Bouton tout télécharger
+const btnAll = document.createElement('button')
+btnAll.textContent = '⬇ Tout télécharger'
+btnAll.style.cssText = 'background:#1C1409;color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:0.95rem;font-weight:700;margin-top:8px'
+btnAll.onclick = () => {
+  SIZES.forEach(({ size, name }, i) => {
+    setTimeout(() => generateIcon(size, name), i * 300)
+  })
+}
+document.getElementById('btns').before(btnAll)
+</script>
+</body>
+</html>
