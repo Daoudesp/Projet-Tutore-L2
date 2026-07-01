@@ -23,6 +23,9 @@ function ModifierAnnonce() {
           type_logement: a.type_logement || 'STUDIO',
           adresse: a.adresse || '',
           surface: a.surface || '',
+          nombre_pieces: a.nombre_pieces || '',
+          nombre_salles_de_bain: a.nombre_salles_de_bain || '',
+          etage: a.etage ?? 0,
           meuble: a.meuble || false,
         })
       })
@@ -46,6 +49,9 @@ function ModifierAnnonce() {
         ...form,
         prix: Number(form.prix),
         surface: form.surface ? Number(form.surface) : null,
+        nombre_pieces: form.nombre_pieces ? Number(form.nombre_pieces) : null,
+        nombre_salles_de_bain: form.nombre_salles_de_bain ? Number(form.nombre_salles_de_bain) : null,
+        etage: Number(form.etage) || 0,
       })
       setSucces(true)
     } catch (err) {
@@ -110,6 +116,24 @@ function ModifierAnnonce() {
             <div style={styles.group}>
               <label style={styles.label}>Surface (m²)</label>
               <input style={styles.input} type="number" min="0" name="surface" value={form.surface} onChange={handleChange} />
+            </div>
+          </div>
+
+          <div style={styles.row}>
+            <div style={styles.group}>
+              <label style={styles.label}>Nombre de pièces</label>
+              <input style={styles.input} type="number" min="1" name="nombre_pieces" value={form.nombre_pieces} onChange={handleChange} />
+            </div>
+            <div style={styles.group}>
+              <label style={styles.label}>Salles de bain</label>
+              <input style={styles.input} type="number" min="0" name="nombre_salles_de_bain" value={form.nombre_salles_de_bain} onChange={handleChange} />
+            </div>
+          </div>
+
+          <div style={styles.row}>
+            <div style={styles.group}>
+              <label style={styles.label}>Étage</label>
+              <input style={styles.input} type="number" min="0" name="etage" value={form.etage} onChange={handleChange} />
             </div>
           </div>
 

@@ -157,11 +157,12 @@ function DetailAnnonce() {
             <div style={styles.statsRow}>
               {[
                 { val: annonce.nombre_pieces || '–', lib: 'pièce(s)' },
+                { val: annonce.nombre_salles_de_bain || '–', lib: 'salle(s) de bain' },
                 { val: annonce.surface ? `${annonce.surface}m²` : '–', lib: 'surface' },
                 { val: annonce.etage != null ? `${annonce.etage}e` : '–', lib: 'étage' },
                 { val: annonce.meuble ? 'Oui' : 'Non', lib: 'meublé' },
               ].map((s, i) => (
-                <div key={i} style={{ ...styles.statBox, borderRight: i < 3 ? '1px solid #E5DDD4' : 'none' }}>
+                <div key={i} style={{ ...styles.statBox, borderRight: i < 4 ? '1px solid #E5DDD4' : 'none' }}>
                   <strong style={{ fontSize: '1.1rem', color: '#1C1409' }}>{s.val}</strong>
                   <span style={{ fontSize: '0.8rem', color: '#6B5E4C' }}>{s.lib}</span>
                 </div>

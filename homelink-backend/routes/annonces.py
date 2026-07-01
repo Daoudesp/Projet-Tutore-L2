@@ -61,6 +61,7 @@ def get_annonce(id):
         'adresse': annonce.bien.adresse,
         'surface': float(annonce.bien.surface) if annonce.bien.surface else None,
         'nombre_pieces': annonce.bien.nombre_pieces,
+        'nombre_salles_de_bain': annonce.bien.nombre_salles_de_bain,
         'etage': annonce.bien.etage,
         'meuble': annonce.bien.meuble,
         'bien_id': annonce.bien_id,
@@ -251,6 +252,12 @@ def modifier_annonce(id):
         annonce.bien.adresse = data['adresse']
     if 'surface' in data:
         annonce.bien.surface = data['surface']
+    if 'nombre_pieces' in data:
+        annonce.bien.nombre_pieces = data['nombre_pieces']
+    if 'nombre_salles_de_bain' in data:
+        annonce.bien.nombre_salles_de_bain = data['nombre_salles_de_bain']
+    if 'etage' in data:
+        annonce.bien.etage = data['etage']
     if 'meuble' in data:
         annonce.bien.meuble = data['meuble']
 

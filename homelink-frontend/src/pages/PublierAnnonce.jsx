@@ -23,6 +23,7 @@ function PublierAnnonce() {
     adresse: '',
     surface: '',
     nombre_pieces: '',
+    nombre_salles_de_bain: '',
     etage: '0',
     meuble: false,
   })
@@ -62,6 +63,7 @@ function PublierAnnonce() {
         prix: Number(form.prix),
         surface: Number(form.surface),
         nombre_pieces: Number(form.nombre_pieces),
+        nombre_salles_de_bain: form.nombre_salles_de_bain ? Number(form.nombre_salles_de_bain) : null,
         etage: Number(form.etage),
         quartier_id: Number(form.quartier_id),
       })
@@ -200,6 +202,13 @@ function PublierAnnonce() {
                   <label style={styles.label}>Nombre de pièces <span style={styles.reqStar}>*</span></label>
                   <input style={styles.input} type="number" min="1" name="nombre_pieces" placeholder="1" value={form.nombre_pieces} onChange={handleChange} />
                 </div>
+                <div style={styles.group}>
+                  <label style={styles.label}>Salles de bain</label>
+                  <input style={styles.input} type="number" min="0" name="nombre_salles_de_bain" placeholder="1" value={form.nombre_salles_de_bain} onChange={handleChange} />
+                </div>
+              </div>
+
+              <div style={styles.row}>
                 <div style={styles.group}>
                   <label style={styles.label}>Étage</label>
                   <input style={styles.input} type="number" min="0" name="etage" placeholder="0" value={form.etage} onChange={handleChange} />
