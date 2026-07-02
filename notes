@@ -4,3 +4,32 @@ Pour les ajouter : clique Add Environment Variable, tu as deux champs — Key (l
 KeyValueDB_HOSTsql7.freesqldatabase.comDB_USERsql7831769
 Le backend est en ligne 🎉
 URL du backend : https://projet-tutore-l2.onrender.com
+Les informations de connexions 
+
+DB_HOST : sql7.freesqldatabase.com
+DB_USER : sql7831769
+DB_NAME : sql7831769
+DB_PASSWORD : hvkgnJeMl2
+JWT_SECRET_KEY : homelink_secret_2026
+MAIL_USERNAME : daoudacisse750@gmail.com
+MAIL_PASSWORD : kfwc tcgi jcaqrhic
+CLOUDINARY_CLOUD_NAME dpmosrhj0
+CLOUDINARY_API_KEY 492328812668876
+CLOUDINARY_API_SECRET xVi16Hr7WRPbgnun8SQVnokBpMA
+FRONTEND_URL :  https://projet-tutore-l2.vercel.app/
+
+JWT JSON Web Token Son utilité :
+Quand un utilisateur se connecte, Flask génère un token JWT signé avec cette clé secrète. La signature garantit que personne ne peut falsifier le token.
+Par exemple si un locataire essaie de modifier le token pour changer son id ou son role en administrateur, la vérification de signature échouera — Flask rejettera le token avec une erreur 401.
+C'est comme un tampon secret : Flask signe le token au départ avec la clé, et vérifie la signature à chaque requête. Sans connaître la clé, impossible de créer un token valide.
+Leaflet
+Leaflet est une bibliothèque JavaScript open-source pour créer des cartes interactives. Dans HomeLink ça permettrait d'afficher les annonces sur une carte de Dakar avec des marqueurs cliquables. Tu installes via npm install leaflet react-leaflet, tu centras la carte sur Dakar ([14.6937, -17.4441]), et chaque annonce avec des coordonnées GPS apparaît comme un pin. Le locataire peut voir tous les logements disponibles géographiquement plutôt que de les parcourir en liste. Pour ça il faudrait ajouter les colonnes latitude et longitude dans biens_immobiliers et laisser le propriétaire placer son bien sur la carte au moment de la publication.
+
+Gunicorn
+Non, Gunicorn n'est pas la plateforme de déploiement — Render c'est la plateforme (l'hébergeur). Gunicorn est le serveur WSGI qui fait tourner Flask en production.
+La différence concrète :
+
+En développement local tu fais flask run → Flask utilise son propre mini-serveur intégré, qui n'est pas prévu pour gérer plusieurs requêtes simultanées
+En production sur Render, la commande de démarrage est gunicorn app:app → Gunicorn reçoit les requêtes HTTP entrantes et les distribue à Flask, en gérant plusieurs workers en parallèle
+
+Donc : Render = hébergeur, Gunicorn = serveur qui fait tourner ton code Flask sur cet hébergeur.
