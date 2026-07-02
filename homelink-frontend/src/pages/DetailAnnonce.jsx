@@ -11,6 +11,18 @@ function DetailAnnonce() {
   const [envoye, setEnvoye] = useState(false)
   const [favori, setFavori] = useState(false)
   const [photoIndex, setPhotoIndex] = useState(0)
+
+  const photoPrecedente = () => {
+    setPhotoIndex((ancien) =>
+      ancien === 0 ? annonce.photos.length - 1 : ancien - 1
+    )
+  }
+
+  const photoSuivante = () => {
+    setPhotoIndex((ancien) =>
+      ancien === annonce.photos.length - 1 ? 0 : ancien + 1
+    )
+  }
   const [avis, setAvis] = useState([])
   const [noteForm, setNoteForm] = useState(5)
   const [commentaireForm, setCommentaireForm] = useState('')
@@ -99,33 +111,81 @@ function DetailAnnonce() {
 
       {/* HERO IMAGE */}
       {annonce.photos && annonce.photos.length > 0 ? (
-        <div style={{ position: 'relative' }}>
-          <div
-            key={photoIndex}
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '360px',
+            overflow: 'hidden',
+            background: '#eee',
+          }}
+        >
+          <img
+            src={annonce.photos[photoIndex]}
+            alt="Photo du logement"
             style={{
-              ...styles.imgHero,
-              backgroundImage: `url(${annonce.photos[photoIndex]})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
             }}
           />
+
           {annonce.photos.length > 1 && (
-            <div style={styles.photoNav}>
-              {annonce.photos.map((photo, i) => (
-                <button
-                  key={photo}
-                  onClick={() => {
-                    console.log("Photo sélectionnée :", i)
-                    setPhotoIndex(i)
-                  }}
-                  style={{
-                    ...styles.photoDot,
-                    ...(i === photoIndex ? styles.photoDotActif : {})
-                  }}
-                />
-              ))}
-            </div>
+            <>
+              <button
+                onClick={photoPrecedente}
+                style={{
+                  position: 'absolute',
+                  left: '15px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '45px',
+                  height: '45px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(0,0,0,.5)',
+                  color: '#fff',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                }}
+              >
+                ❮
+              </button>
+
+              <button
+                onClick={photoSuivante}
+                style={{
+                  position: 'absolute',
+                  right: '15px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '45px',
+                  height: '45px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'rgba(0,0,0,.5)',
+                  color: '#fff',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                }}
+              >
+                ❯
+              </button>
+
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '15px',
+                  width: '100%',
+                  textAlign: 'center',
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  textShadow: '0 0 4px black',
+                }}
+              >
+                {photoIndex + 1} / {annonce.photos.length}
+              </div>
+            </>
           )}
         </div>
       ) : (
