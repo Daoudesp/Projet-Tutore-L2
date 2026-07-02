@@ -9,7 +9,6 @@ class Annonce(db.Model):
     description = db.Column(db.Text)
     prix = db.Column(db.Numeric(10, 2), nullable=False)
     date_publication = db.Column(db.DateTime, server_default=db.func.now())
-    date_expiration = db.Column(db.DateTime)
     statut = db.Column(db.Enum('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE'), default='EN_ATTENTE')
     locataire_loue_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'), nullable=True)
 

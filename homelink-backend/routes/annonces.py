@@ -76,6 +76,10 @@ def get_annonce(id):
 @jwt_required()
 def publier_annonce():
     data = request.get_json()
+
+    print("===== DATA RECUE =====")
+    print(data)
+
     utilisateur_id = int(get_jwt_identity())
 
     u = db.session.get(Utilisateur, utilisateur_id)
@@ -83,16 +87,23 @@ def publier_annonce():
         return jsonify({'message': 'Réservé aux propriétaires'}), 403
 
     if not data.get('titre', '').strip():
+        print("ERREUR : titre manquant")
         return jsonify({'message': 'Le titre est obligatoire'}), 400
+
     try:
         prix = float(data.get('prix', 0))
         if prix <= 0:
             raise ValueError
     except (TypeError, ValueError):
+        print("ERREUR : prix invalide")
         return jsonify({'message': 'Le loyer doit être un nombre supérieur à 0'}), 400
+
     if not data.get('quartier_id'):
+        print("ERREUR : quartier_id manquant")
         return jsonify({'message': 'Le quartier est obligatoire'}), 400
+
     if not data.get('type_logement'):
+        print("ERREUR : type_logement manquant")
         return jsonify({'message': 'Le type de logement est obligatoire'}), 400
 
     bien = BienImmobilier(
@@ -113,66 +124,16 @@ def publier_annonce():
         bien_id=bien.id,
         titre=data['titre'],
         description=data.get('description'),
-        prix=data['prix'],
+        prix=prix,
         statut='EN_ATTENTE'
     )
     db.session.add(annonce)
     db.session.commit()
 
-    return jsonify({'message': 'Annonce soumise, en attente de validation', 'annonce_id': annonce.id}), 201
-
-
-# Changer le statut d'une annonce (propriétaire : LOUEE/PUBLIEE | admin : tous)
-@annonces.route('/annonces/<int:id>/statut', methods=['PUT'])
-@jwt_required()
-def changer_statut(id):
-    utilisateur_id = int(get_jwt_identity())
-    utilisateur = db.session.get(Utilisateur, utilisateur_id)
-    if not utilisateur:
-        return jsonify({'message': 'Utilisateur introuvable'}), 404
-
-    annonce = db.session.get(Annonce, id)
-    if not annonce:
-        return jsonify({'message': 'Annonce introuvable'}), 404
-
-    data = request.get_json()
-    nouveau_statut = data.get('statut', '').upper()
-
-    if utilisateur.role == 'administrateur':
-        # Admin peut tout changer
-        if nouveau_statut not in STATUTS_VALIDES:
-            return jsonify({'message': 'Statut invalide'}), 400
-        # Bloquer la publication si aucune photo
-        if nouveau_statut == 'PUBLIEE':
-            nb_photos = Photo.query.filter_by(annonce_id=annonce.id).count()
-            if nb_photos == 0:
-                return jsonify({'message': 'Impossible de publier une annonce sans photo'}), 400
-    elif utilisateur.role == 'proprietaire':
-        # Propriétaire peut seulement : PUBLIEE → LOUEE ou LOUEE → PUBLIEE
-        if annonce.bien.proprietaire_id != utilisateur_id:
-            return jsonify({'message': 'Action non autorisée'}), 403
-        if nouveau_statut not in ('LOUEE', 'PUBLIEE'):
-            return jsonify({'message': 'Action non autorisée'}), 403
-        if annonce.statut not in ('PUBLIEE', 'LOUEE'):
-            return jsonify({'message': 'Seules les annonces publiées peuvent être modifiées'}), 400
-
-        # Quand on marque LOUEE : enregistrer le locataire désigné
-        if nouveau_statut == 'LOUEE':
-            locataire_id = data.get('locataire_id')
-            if not locataire_id:
-                return jsonify({'message': 'Veuillez sélectionner le locataire qui a loué ce logement'}), 400
-            locataire = db.session.get(Utilisateur, int(locataire_id))
-            if not locataire or locataire.role != 'locataire':
-                return jsonify({'message': 'Locataire introuvable'}), 400
-            annonce.locataire_loue_id = int(locataire_id)
-        # Quand on repasse PUBLIEE : on garde locataire_loue_id (pour l'avis)
-    else:
-        return jsonify({'message': 'Action non autorisée'}), 403
-
-    annonce.statut = nouveau_statut
-    db.session.commit()
-    return jsonify({'message': f'Statut mis à jour : {nouveau_statut}'}), 200
-
+    return jsonify({
+        'message': 'Annonce soumise, en attente de validation',
+        'annonce_id': annonce.id
+    }), 201
 
 # Locataires ayant messagé pour une annonce (pour choisir qui a loué)
 @annonces.route('/annonces/<int:id>/locataires-messages', methods=['GET'])
