@@ -100,19 +100,25 @@ function DetailAnnonce() {
       {/* HERO IMAGE */}
       {annonce.photos && annonce.photos.length > 0 ? (
         <div style={{ position: 'relative' }}>
-          <div style={{
-            ...styles.imgHero,
-            backgroundImage: `url(${annonce.photos[photoIndex]})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }} />
+          <div
+            key={photoIndex}
+            style={{
+              ...styles.imgHero,
+              backgroundImage: `url(${annonce.photos[photoIndex]})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          />
           {annonce.photos.length > 1 && (
             <div style={styles.photoNav}>
-              {annonce.photos.map((_, i) => (
+              {annonce.photos.map((photo, i) => (
                 <button
-                  key={i}
-                  onClick={() => setPhotoIndex(i)}
+                  key={photo}
+                  onClick={() => {
+                    console.log("Photo sélectionnée :", i)
+                    setPhotoIndex(i)
+                  }}
                   style={{
                     ...styles.photoDot,
                     ...(i === photoIndex ? styles.photoDotActif : {})
