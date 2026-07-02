@@ -18,12 +18,28 @@ STATUTS_VALIDES = ('EN_ATTENTE', 'PUBLIEE', 'SUSPENDUE', 'LOUEE', 'EXPIREE')
 @annonces.route('/annonces', methods=['GET'])
 def get_annonces():
     opts = joinedload(Annonce.bien).joinedload(BienImmobilier.quartier)
-    liste = Annonce.query.options(opts).filter_by(statut='PUBLIEE').order_by(Annonce.date_publication.desc()).all()
+
+    liste = (
+        Annonce.query
+        .options(opts)
+        .filter_by(statut='PUBLIEE')
+        .order_by(Annonce.date_publication.desc())
+        .all()
+    )
+
     resultat = []
+
     for annonce in liste:
         if not annonce.bien or not annonce.bien.quartier:
             continue
-        premiere_photo = Photo.query.filter_by(annonce_id=annonce.id).order_by(Photo.ordre).first()
+
+        premiere_photo = (
+            Photo.query
+            .filter_by(annonce_id=annonce.id)
+            .order_by(Photo.id)
+            .first()
+        )
+
         resultat.append({
             'id': annonce.id,
             'titre': annonce.titre,
@@ -36,6 +52,7 @@ def get_annonces():
             'meuble': annonce.bien.meuble,
             'photo': premiere_photo.url if premiere_photo else None,
         })
+
     return jsonify(resultat), 200
 
 
@@ -43,10 +60,16 @@ def get_annonces():
 @annonces.route('/annonces/<int:id>', methods=['GET'])
 def get_annonce(id):
     annonce = db.session.get(Annonce, id)
+
     if not annonce or not annonce.bien or not annonce.bien.quartier:
         return jsonify({'message': 'Annonce introuvable'}), 404
 
-    photos = Photo.query.filter_by(annonce_id=annonce.id).order_by(Photo.ordre).all()
+    photos = (
+        Photo.query
+        .filter_by(annonce_id=annonce.id)
+        .order_by(Photo.id)
+        .all()
+    )
 
     return jsonify({
         'id': annonce.id,
@@ -117,6 +140,7 @@ def publier_annonce():
         meuble=data.get('meuble', False),
         type_logement=data['type_logement']
     )
+
     db.session.add(bien)
     db.session.flush()
 
@@ -127,6 +151,7 @@ def publier_annonce():
         prix=prix,
         statut='EN_ATTENTE'
     )
+
     db.session.add(annonce)
     db.session.commit()
 
@@ -135,27 +160,39 @@ def publier_annonce():
         'annonce_id': annonce.id
     }), 201
 
-# Locataires ayant messagé pour une annonce (pour choisir qui a loué)
+
+# Locataires ayant messagé pour une annonce
 @annonces.route('/annonces/<int:id>/locataires-messages', methods=['GET'])
 @jwt_required()
 def get_locataires_messages(id):
     utilisateur_id = int(get_jwt_identity())
+
     annonce = db.session.get(Annonce, id)
+
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
+
     if annonce.bien.proprietaire_id != utilisateur_id:
         return jsonify({'message': 'Action non autorisée'}), 403
 
-    messages = Message.query.filter_by(annonce_id=id).filter(
-        Message.expediteur_id != utilisateur_id
-    ).all()
+    messages = (
+        Message.query
+        .filter_by(annonce_id=id)
+        .filter(Message.expediteur_id != utilisateur_id)
+        .all()
+    )
 
-    # Dédupliquer par locataire
     vus = set()
     locataires = []
+
     for m in messages:
-        if m.expediteur_id not in vus and m.expediteur and m.expediteur.role == 'locataire':
+        if (
+            m.expediteur_id not in vus
+            and m.expediteur
+            and m.expediteur.role == 'locataire'
+        ):
             vus.add(m.expediteur_id)
+
             locataires.append({
                 'id': m.expediteur_id,
                 'prenom': m.expediteur.prenom,
@@ -166,16 +203,19 @@ def get_locataires_messages(id):
     return jsonify(locataires), 200
 
 
-# Supprimer une annonce (propriétaire = ses annonces | admin = toutes)
+# Supprimer une annonce
 @annonces.route('/annonces/<int:id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_annonce(id):
     utilisateur_id = int(get_jwt_identity())
+
     utilisateur = db.session.get(Utilisateur, utilisateur_id)
+
     if not utilisateur:
         return jsonify({'message': 'Utilisateur introuvable'}), 404
 
     annonce = db.session.get(Annonce, id)
+
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
 
@@ -185,6 +225,7 @@ def supprimer_annonce(id):
 
     db.session.delete(annonce)
     db.session.commit()
+
     return jsonify({'message': 'Annonce supprimée'}), 200
 
 
@@ -193,35 +234,51 @@ def supprimer_annonce(id):
 @jwt_required()
 def modifier_annonce(id):
     utilisateur_id = int(get_jwt_identity())
+
     annonce = db.session.get(Annonce, id)
 
     if not annonce:
         return jsonify({'message': 'Annonce introuvable'}), 404
+
     if annonce.bien.proprietaire_id != utilisateur_id:
         return jsonify({'message': 'Action non autorisée'}), 403
 
     data = request.get_json()
+
     if 'titre' in data:
         annonce.titre = data['titre']
+
     if 'description' in data:
         annonce.description = data['description']
+
     if 'prix' in data:
         annonce.prix = data['prix']
+
     if 'type_logement' in data:
         annonce.bien.type_logement = data['type_logement']
+
     if 'adresse' in data:
         annonce.bien.adresse = data['adresse']
+
     if 'surface' in data:
         annonce.bien.surface = data['surface']
+
     if 'nombre_pieces' in data:
         annonce.bien.nombre_pieces = data['nombre_pieces']
+
     if 'nombre_salles_de_bain' in data:
         annonce.bien.nombre_salles_de_bain = data['nombre_salles_de_bain']
+
     if 'etage' in data:
         annonce.bien.etage = data['etage']
+
     if 'meuble' in data:
         annonce.bien.meuble = data['meuble']
 
     annonce.statut = 'EN_ATTENTE'
+
     db.session.commit()
-    return jsonify({'message': 'Annonce modifiée, en attente de validation'}), 200
+
+    return jsonify({
+        'message': 'Annonce modifiée, en attente de validation'
+    }), 200
