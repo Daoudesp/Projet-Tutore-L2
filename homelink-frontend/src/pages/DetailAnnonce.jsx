@@ -42,7 +42,6 @@ function DetailAnnonce() {
             .then(r => setAvis(r.data))
             .catch(() => {})
 
-          // Vérifier si le locataire connecté peut laisser un avis
           if (token && userLocal.role === 'locataire') {
             api.get(`/avis/eligibilite/${res.data.bien_id}`)
               .then(r => {
@@ -51,6 +50,15 @@ function DetailAnnonce() {
               })
               .catch(() => {})
           }
+        }
+
+        if (token && userLocal.role === 'locataire') {
+          api.get('/favoris')
+            .then(r => {
+              const dejaFavori = r.data.some(f => f.annonce_id === Number(id))
+              setFavori(dejaFavori)
+            })
+            .catch(() => {})
         }
       })
       .catch(() => navigate('/annonces'))
@@ -91,15 +99,15 @@ function DetailAnnonce() {
   const handleFavori = async () => {
     if (!token) { navigate('/login'); return }
     try {
-      await api.post(`/favoris/${id}`)
-      setFavori(true)
-    } catch (err) {
-      const msg = err.response?.data?.message || ''
-      if (msg.includes('déjà')) {
-        setFavori(true) // déjà dans les favoris, on met juste le bouton actif
+      if (favori) {
+        await api.delete(`/favoris/${id}`)
+        setFavori(false)
       } else {
-        alert("Erreur lors de l'ajout aux favoris")
+        await api.post(`/favoris/${id}`)
+        setFavori(true)
       }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Erreur lors de la mise à jour des favoris')
     }
   }
 
@@ -431,7 +439,7 @@ function DetailAnnonce() {
                     style={favori ? styles.btnFavoriActif : styles.btnFavori}
                     onClick={handleFavori}
                   >
-                    {favori ? '❤️ Ajouté aux favoris' : '🤍 Ajouter aux favoris'}
+                    {favori ? '❤️ Retirer des favoris' : '🤍 Ajouter aux favoris'}
                   </button>
                 )}
               </div>
