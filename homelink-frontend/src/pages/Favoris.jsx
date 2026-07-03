@@ -21,12 +21,23 @@ function Favoris() {
       .finally(() => setChargement(false))
   }
 
+  const [suppressionEnCours, setSuppressionEnCours] = useState(null)
+
   const handleSupprimer = async (annonce_id) => {
+    if (suppressionEnCours === annonce_id) return
+
+    setSuppressionEnCours(annonce_id)
     try {
       await api.delete(`/favoris/${annonce_id}`)
       setFavoris(favoris.filter(f => f.annonce_id !== annonce_id))
-    } catch {
-      alert('Erreur lors de la suppression')
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setFavoris(favoris.filter(f => f.annonce_id !== annonce_id))
+      } else {
+        alert(err.response?.data?.message || 'Erreur lors de la suppression')
+      }
+    } finally {
+      setSuppressionEnCours(null)
     }
   }
 
@@ -70,8 +81,13 @@ function Favoris() {
                   <div style={styles.cardTop}>
                     <span style={styles.badge}>{f.type_logement}</span>
                     <button
-                      style={styles.btnSupprimer}
+                      style={{
+                        ...styles.btnSupprimer,
+                        opacity: suppressionEnCours === f.annonce_id ? 0.5 : 1,
+                        cursor: suppressionEnCours === f.annonce_id ? 'wait' : 'pointer',
+                      }}
                       onClick={() => handleSupprimer(f.annonce_id)}
+                      disabled={suppressionEnCours === f.annonce_id}
                       title="Retirer des favoris"
                     >
                       ❤️

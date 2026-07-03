@@ -10,6 +10,8 @@ function DetailAnnonce() {
   const [message, setMessage] = useState('')
   const [envoye, setEnvoye] = useState(false)
   const [favori, setFavori] = useState(false)
+  const [favoriCharge, setFavoriCharge] = useState(false)
+  const [favoriEnCours, setFavoriEnCours] = useState(false)
   const [photoIndex, setPhotoIndex] = useState(0)
 
   const photoPrecedente = () => {
@@ -53,12 +55,10 @@ function DetailAnnonce() {
         }
 
         if (token && userLocal.role === 'locataire') {
-          api.get('/favoris')
-            .then(r => {
-              const dejaFavori = r.data.some(f => f.annonce_id === Number(id))
-              setFavori(dejaFavori)
-            })
-            .catch(() => {})
+          api.get(`/favoris/check/${id}`)
+            .then(r => setFavori(Boolean(r.data.favori)))
+            .catch(() => setFavori(false))
+            .finally(() => setFavoriCharge(true))
         }
       })
       .catch(() => navigate('/annonces'))
@@ -98,6 +98,9 @@ function DetailAnnonce() {
 
   const handleFavori = async () => {
     if (!token) { navigate('/login'); return }
+    if (favoriEnCours) return
+
+    setFavoriEnCours(true)
     try {
       if (favori) {
         await api.delete(`/favoris/${id}`)
@@ -107,7 +110,16 @@ function DetailAnnonce() {
         setFavori(true)
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Erreur lors de la mise à jour des favoris')
+      const msg = err.response?.data?.message || ''
+      if (err.response?.status === 404) {
+        setFavori(false)
+      } else if (msg.includes('déjà')) {
+        setFavori(true)
+      } else {
+        alert(msg || 'Erreur lors de la mise à jour des favoris')
+      }
+    } finally {
+      setFavoriEnCours(false)
     }
   }
 
@@ -436,10 +448,19 @@ function DetailAnnonce() {
 
                 {token && userLocal.role === 'locataire' && (
                   <button
-                    style={favori ? styles.btnFavoriActif : styles.btnFavori}
+                    style={{
+                      ...(favori ? styles.btnFavoriActif : styles.btnFavori),
+                      opacity: !favoriCharge || favoriEnCours ? 0.6 : 1,
+                      cursor: !favoriCharge || favoriEnCours ? 'wait' : 'pointer',
+                    }}
                     onClick={handleFavori}
+                    disabled={!favoriCharge || favoriEnCours}
                   >
-                    {favori ? '❤️ Retirer des favoris' : '🤍 Ajouter aux favoris'}
+                    {!favoriCharge
+                      ? 'Chargement…'
+                      : favori
+                        ? '❤️ Retirer des favoris'
+                        : '🤍 Ajouter aux favoris'}
                   </button>
                 )}
               </div>

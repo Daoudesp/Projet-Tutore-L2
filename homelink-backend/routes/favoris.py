@@ -9,6 +9,21 @@ from models.utilisateur import Utilisateur
 favoris = Blueprint('favoris', __name__)
 
 
+@favoris.route('/favoris/check/<int:annonce_id>', methods=['GET'])
+@jwt_required()
+def check_favori(annonce_id):
+    locataire_id = int(get_jwt_identity())
+    u = db.session.get(Utilisateur, locataire_id)
+    if not u or u.role != 'locataire':
+        return jsonify({'favori': False}), 200
+
+    existe = Favori.query.filter_by(
+        locataire_id=locataire_id,
+        annonce_id=annonce_id,
+    ).first() is not None
+    return jsonify({'favori': existe}), 200
+
+
 @favoris.route('/favoris/<int:annonce_id>', methods=['POST'])
 @jwt_required()
 def ajouter_favori(annonce_id):
@@ -27,7 +42,7 @@ def ajouter_favori(annonce_id):
         return jsonify({'message': 'Cette annonce n\'est pas disponible'}), 400
 
     if Favori.query.filter_by(locataire_id=locataire_id, annonce_id=annonce_id).first():
-        return jsonify({'message': 'Annonce déjà dans les favoris'}), 400
+        return jsonify({'message': 'Annonce déjà dans les favoris'}), 200
 
     favori = Favori(locataire_id=locataire_id, annonce_id=annonce_id)
     db.session.add(favori)
