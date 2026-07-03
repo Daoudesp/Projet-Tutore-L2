@@ -92,7 +92,6 @@ CREATE TABLE IF NOT EXISTS `photos` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `annonce_id` INT NOT NULL,
   `url` VARCHAR(500) NOT NULL,
-  `ordre` INT DEFAULT 0,
   FOREIGN KEY (`annonce_id`) REFERENCES `annonces`(`id`) ON DELETE CASCADE
 );
 

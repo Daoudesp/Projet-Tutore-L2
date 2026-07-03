@@ -49,7 +49,7 @@ def get_favoris():
     for favori in liste:
         if not favori.annonce:
             continue
-        premiere_photo = Photo.query.filter_by(annonce_id=favori.annonce_id).order_by(Photo.ordre).first()
+        premiere_photo = Photo.query.filter_by(annonce_id=favori.annonce_id).order_by(Photo.id).first()
         resultat.append({
             'id': favori.id,
             'annonce_id': favori.annonce_id,
