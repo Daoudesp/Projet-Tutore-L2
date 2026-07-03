@@ -203,6 +203,46 @@ def get_locataires_messages(id):
     return jsonify(locataires), 200
 
 
+@annonces.route('/annonces/<int:id>/statut', methods=['PUT'])
+@jwt_required()
+def changer_statut(id):
+    utilisateur_id = int(get_jwt_identity())
+    annonce = db.session.get(Annonce, id)
+
+    if not annonce:
+        return jsonify({'message': 'Annonce introuvable'}), 404
+
+    if annonce.bien.proprietaire_id != utilisateur_id:
+        return jsonify({'message': 'Action non autorisée'}), 403
+
+    data = request.get_json() or {}
+    statut = data.get('statut')
+
+    if statut not in ('LOUEE', 'PUBLIEE'):
+        return jsonify({'message': 'Statut invalide'}), 400
+
+    if statut == 'LOUEE':
+        locataire_id = data.get('locataire_id')
+        if not locataire_id:
+            return jsonify({'message': 'Sélectionnez un locataire'}), 400
+
+        locataire = db.session.get(Utilisateur, int(locataire_id))
+        if not locataire or locataire.role != 'locataire':
+            return jsonify({'message': 'Locataire introuvable'}), 404
+
+        annonce.locataire_loue_id = int(locataire_id)
+        annonce.statut = 'LOUEE'
+    else:
+        annonce.statut = 'PUBLIEE'
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Statut mis à jour',
+        'statut': annonce.statut,
+    }), 200
+
+
 # Supprimer une annonce
 @annonces.route('/annonces/<int:id>', methods=['DELETE'])
 @jwt_required()

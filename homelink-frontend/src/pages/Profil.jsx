@@ -63,7 +63,7 @@ function Profil() {
 
   const confirmerLouer = async () => {
     if (!locataireSelectionne) { alert('Sélectionnez un locataire'); return }
-    await handleChangerStatut(modalLouerAnnonce.id, 'LOUEE', locataireSelectionne)
+    await handleChangerStatut(modalLouerAnnonce.id, 'LOUEE', Number(locataireSelectionne))
     setModalLouerAnnonce(null)
     setLocataireSelectionne('')
   }
@@ -163,7 +163,16 @@ const handleSubmit = async (e) => {
               ) : (
                 annonces.map(a => (
                   <div key={a.id} style={styles.annonceRow}>
-                    <div style={styles.miniImg} onClick={() => navigate(`/annonces/${a.id}`)} />
+                    {a.photo ? (
+                      <img
+                        src={a.photo}
+                        alt={a.titre}
+                        style={{ ...styles.miniImg, objectFit: 'cover', cursor: 'pointer' }}
+                        onClick={() => navigate(`/annonces/${a.id}`)}
+                      />
+                    ) : (
+                      <div style={styles.miniImg} onClick={() => navigate(`/annonces/${a.id}`)} />
+                    )}
                     <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate(`/annonces/${a.id}`)}>
                       <p style={{ fontWeight: '600', color: '#1C1409', margin: '0 0 4px', fontSize: '0.9rem' }}>{a.titre}</p>
                       <p style={{ color: '#6B5E4C', fontSize: '0.82rem', margin: 0 }}>

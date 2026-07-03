@@ -6,6 +6,7 @@ from extensions import db
 from models.utilisateur import Utilisateur
 from models.annonce import Annonce
 from models.bien_immobilier import BienImmobilier
+from models.photo import Photo
 
 profil = Blueprint('profil', __name__)
 
@@ -96,11 +97,21 @@ def get_mes_annonces():
              .filter(BienImmobilier.proprietaire_id == utilisateur_id)
              .order_by(Annonce.date_publication.desc())
              .all())
-    return jsonify([{
-        'id': a.id,
-        'titre': a.titre,
-        'prix': float(a.prix),
-        'statut': a.statut,
-        'type_logement': a.bien.type_logement if a.bien else '–',
-        'quartier': a.bien.quartier.nom if a.bien and a.bien.quartier else '–',
-    } for a in liste]), 200
+    resultat = []
+    for a in liste:
+        premiere_photo = (
+            Photo.query
+            .filter_by(annonce_id=a.id)
+            .order_by(Photo.id)
+            .first()
+        )
+        resultat.append({
+            'id': a.id,
+            'titre': a.titre,
+            'prix': float(a.prix),
+            'statut': a.statut,
+            'type_logement': a.bien.type_logement if a.bien else '–',
+            'quartier': a.bien.quartier.nom if a.bien and a.bien.quartier else '–',
+            'photo': premiere_photo.url if premiere_photo else None,
+        })
+    return jsonify(resultat), 200
