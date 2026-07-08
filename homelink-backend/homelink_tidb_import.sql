@@ -186,9 +186,9 @@ INSERT IGNORE INTO `utilisateurs` (`nom`, `prenom`, `email`, `mot_de_passe`, `te
 VALUES (
   'Admin',
   'HomeLink',
-  'daoudacisse@esp.sn',
+  'daoudacisse750@gmail.com',
   'scrypt:32768:8:1$SKoYVumV81NsLnys$5fb4a0fe052c0b353b76be75f7468e2ed87941362ce35cc9dee2e737c1ad31bfd569fc83856b335e5851f540d0a07cfda96258556a794089797e8402f1435e86',
-  '770000000',
+  '783485847',
   'administrateur',
   1,
   1

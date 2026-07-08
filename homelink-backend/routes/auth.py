@@ -171,8 +171,16 @@ def verify_email():
     if not utilisateur:
         return jsonify({'message': 'Lien invalide ou déjà utilisé'}), 400
 
+    # Le lien a déjà été utilisé (souvent parce qu'un client mail comme Gmail
+    # "pré-visite" automatiquement les liens pour les scanner avant que
+    # l'utilisateur ne clique lui-même). Dans ce cas, on ne renvoie pas une
+    # erreur : le compte est bel et bien confirmé, on le confirme calmement.
+    if utilisateur.email_verifie:
+        return jsonify({
+            'message': 'Votre email est déjà confirmé. Vous pouvez vous connecter.'
+        }), 200
+
     utilisateur.email_verifie = True
-    utilisateur.email_token = None
     db.session.commit()
 
     return jsonify({'message': 'Email confirmé avec succès ! Vous pouvez maintenant vous connecter.'}), 200
