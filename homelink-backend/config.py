@@ -8,11 +8,31 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def _build_ssl_connect_args():
+    ssl_ca = os.getenv('DB_SSL_CA', '').strip()
+    if not ssl_ca:
+        return {}
+    return {
+        'ssl_verify_cert': True,
+        'ssl_verify_identity': True,
+        'ssl_ca': ssl_ca,
+    }
+
 class Config:
+    _db_host = os.getenv('DB_HOST')
+    _db_port = os.getenv('DB_PORT', '4000')
+    _db_user = os.getenv('DB_USER')
+    _db_password = os.getenv('DB_PASSWORD')
+    _db_name = os.getenv('DB_NAME')
+
     SQLALCHEMY_DATABASE_URI = (
-        f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-        f"@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+        f"mysql+pymysql://{_db_user}:{_db_password}"
+        f"@{_db_host}:{_db_port}/{_db_name}"
     )
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'connect_args': _build_ssl_connect_args(),
+        'pool_recycle': 300,
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
     JWT_ACCESS_TOKEN_EXPIRES = False  # Token sans expiration (développement)

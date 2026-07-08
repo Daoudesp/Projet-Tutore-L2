@@ -6,11 +6,15 @@ services:
     startCommand: gunicorn app:app
     envVars:
       - key: DB_HOST
-        value: sql7.freesqldatabase.com
+        value: gateway01.eu-central-1.prod.aws.tidbcloud.com
+      - key: DB_PORT
+        value: "4000"
       - key: DB_USER
-        value: sql7831769
+        value: VZB7fLW8c9nL8n2.root
       - key: DB_NAME
-        value: sql7831769
+        value: homelink
+      - key: DB_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
       - key: DB_PASSWORD
         sync: false
       - key: JWT_SECRET_KEY

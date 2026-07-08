@@ -33,3 +33,33 @@ En développement local tu fais flask run → Flask utilise son propre mini-serv
 En production sur Render, la commande de démarrage est gunicorn app:app → Gunicorn reçoit les requêtes HTTP entrantes et les distribue à Flask, en gérant plusieurs workers en parallèle
 
 Donc : Render = hébergeur, Gunicorn = serveur qui fait tourner ton code Flask sur cet hébergeur.
+API REST, c'est le moyen que ton frontend (React) utilise pour "parler" à ton backend (Flask) et récupérer ou envoyer des données.
+Décomposons le terme :
+API (Application Programming Interface) = une interface qui permet à deux programmes de communiquer entre eux, sans que l'un ait besoin de connaître les détails internes de l'autre. Dans ton projet : React n'a pas besoin de savoir comment Flask va chercher les données en MySQL — il envoie juste une demande, et Flask lui répond.
+REST (Representational State Transfer) = un ensemble de règles/conventions pour organiser cette communication, basées sur le protocole HTTP (celui du web). Les règles principales :
+
+Chaque ressource a une URL — exemple dans ton projet : /annonces, /annonces/12, /avis/5, /favoris
+On utilise des verbes HTTP pour dire ce qu'on veut faire :
+
+GET /annonces → récupérer la liste des annonces
+GET /annonces/12 → récupérer l'annonce n°12
+POST /annonces → créer une nouvelle annonce
+PUT ou PATCH /annonces/12 → modifier l'annonce n°12
+DELETE /annonces/12 → supprimer l'annonce n°12
+
+
+Les données échangées sont en JSON — un format texte simple, lisible, que React peut directement transformer en objets JavaScript
+
+Exemple concret tiré de ton propre code (le fichier DetailAnnonce.jsx qu'on a modifié ensemble) :
+javascriptapi.get(`/annonces/${id}`)
+Ça, c'est un appel API REST classique : React envoie une requête GET vers l'URL /annonces/12 par exemple, Flask reçoit cette requête, va chercher l'annonce correspondante en base MySQL, et renvoie les données en JSON. React les affiche ensuite dans la page.
+Vercel a mis en place un webhook sur ton dépôt GitHub — c'est-à-dire que GitHub prévient automatiquement Vercel à chaque fois qu'il y a un nouveau push sur la branche configurée (généralement main)
+Si le prof demande "comment Vercel sait qu'il doit redéployer ?" → réponds simplement : grâce à un webhook GitHub configuré automatiquement lors de la connexion du dépôt à Vercel — dès qu'un push arrive sur la branche principale, ça déclenche le build et le déploiement.
+C'est quoi : la version sécurisée du protocole HTTP (celui qui transporte les données entre le navigateur et le serveur). Le "S" veut dire Secure.
+Comment ça marche concrètement : toutes les données échangées entre React (navigateur) et Flask (serveur) sont chiffrées grâce à un certificat SSL/TLS. Sans ça, n'importe qui sur le même réseau (ex : un wifi public) pourrait intercepter en clair le mot de passe ou le token JWT que tu envoies.
+Dans ton projet : Render et Vercel fournissent HTTPS automatiquement (certificat généré et géré par la plateforme) — tu n'as rien eu à configurer manuellement.
+2. Hachage bcrypt des mots de passe
+Le problème que ça résout : on ne doit jamais stocker un mot de passe en clair dans la base de données. Si la base est piratée un jour, il ne faut pas que les mots de passe des utilisateurs soient lisibles directement.
+Comment ça marche : bcrypt transforme le mot de passe (ex : azerty123) en une chaîne illisible et irréversible (ex : $2b$12$KIXQ...). Ce n'est pas du chiffrement (qu'on peut déchiffrer), c'est du hachage : une fonction à sens unique — impossible de retrouver le mot de passe original à partir du hash.
+Comment on vérifie alors la connexion : quand l'utilisateur se reconnecte, on ne "déchiffre" pas le hash stocké — on hache à nouveau le mot de passe qu'il vient de taper et on compare les deux hash. S'ils sont identiques, c'est le bon mot de passe.
+Pourquoi bcrypt spécifiquement (et pas juste MD5/SHA1) : bcrypt est volontairement lent et intègre un "salt" (une valeur aléatoire ajoutée avant hachage) différent pour chaque utilisateur, ce qui rend les attaques par force brute ou par "rainbow tables" beaucoup plus difficiles.
