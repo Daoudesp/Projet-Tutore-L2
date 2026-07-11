@@ -12,4 +12,7 @@ class Favori(db.Model):
     date_ajout = db.Column(db.DateTime, server_default=db.func.now())
 
     locataire = db.relationship('Utilisateur', backref='favoris')
-    annonce = db.relationship('Annonce', backref='favoris')
+    annonce = db.relationship(
+        'Annonce',
+        backref=db.backref('favoris', passive_deletes=True)
+    )

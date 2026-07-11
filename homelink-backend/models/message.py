@@ -13,4 +13,7 @@ class Message(db.Model):
 
     expediteur = db.relationship('Utilisateur', foreign_keys=[expediteur_id], backref='messages_envoyes')
     destinataire = db.relationship('Utilisateur', foreign_keys=[destinataire_id], backref='messages_recus')
-    annonce = db.relationship('Annonce', backref='messages')
+    annonce = db.relationship(
+        'Annonce',
+        backref=db.backref('messages', passive_deletes=True)
+    )

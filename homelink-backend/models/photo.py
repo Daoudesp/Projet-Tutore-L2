@@ -7,4 +7,7 @@ class Photo(db.Model):
     annonce_id = db.Column(db.Integer, db.ForeignKey('annonces.id'), nullable=False)
     url = db.Column(db.String(500), nullable=False)
 
-    annonce = db.relationship('Annonce', backref='photos')
+    annonce = db.relationship(
+        'Annonce',
+        backref=db.backref('photos', passive_deletes=True)
+    )
